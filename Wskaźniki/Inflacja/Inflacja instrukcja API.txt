@@ -1,0 +1,11 @@
+W zapytaniu:
+id-zmienna (Wskaźniki cen towarów i usług konsumpcyjnych): 305
+id-przekroj (Polska; Towary i usługi konsumpcyjne_3): 739
+id-okres (miesiące): 247 - 258
+
+Do wyszukania:
+id-sposob-prezentacji-miara (analogiczny okres roku poprzedniego=100): 5
+id-wymiar-2 (Towary i usługi konsumpcyjne_3): 565
+id-pozycja-2 (Ogółem): 6656078
+
+https://api-dbw.stat.gov.pl/api/variable/variable-data-section?id-zmienna=305&id-przekroj=739&id-rok=[rok]&id-okres=[okres]&ile-na-stronie=5000&numer-strony=0&lang=pl

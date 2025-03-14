@@ -1,0 +1,29 @@
+W zapytaniu:
+id-zmienna (Stopa bezrobocia rejsetrowanego): 875
+id-przekroj (Polska, województwa, powiaty): 143
+id-okres (miesiące): 247 - 258
+
+Do wyszukania:
+id-sposob-prezentacji-miara (%): 95
+id-wymiar-1 (Polska, województwa, powiaty): 10
+id-pozycja-1 (Polska): 33617
+
+https://api-dbw.stat.gov.pl/api/variable/variable-data-section?id-zmienna=875&id-przekroj=143&id-rok=[rok]&id-okres=[okres]&ile-na-stronie=5000&numer-strony=0&lang=pl
+
+W zapytaniu:
+id-zmienna (Stopa bezrobocia - BAEL): 1514
+id-przekroj (Polska; Charakter miejscowości; Płeć Ekonomiczna grupa wieku): 1163
+id-okres (kwartały): 270, 271, 272, 273
+
+Do wyszukania:
+id-sposob-prezentacji-miara (%): 95
+id-wymiar-1 (Polska): 2
+id-pozycja-1 (Polska): 33617
+id-wymiar-2 (Charakter miejscowości): 3
+id-pozycja-2 (Ogółem): 6655092
+id-wymiar-3 (Płeć): 1
+id-pozycja-3 (Płeć): 6648242
+id-wymiar-4 (Ekonomiczne grupy wieku): 15
+id-pozycja-4 (Produkcyjny): 6703180
+
+https://api-dbw.stat.gov.pl/api/variable/variable-data-section?id-zmienna=1514&id-przekroj=1163&id-rok=[rok]&id-okres=[okres]&ile-na-stronie=5000&numer-strony=0&lang=pl

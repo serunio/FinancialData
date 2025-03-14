@@ -1,0 +1,14 @@
+W zapytaniu:
+id zmiennej(pkb): 1038
+id przekroju(polska): 16
+id okresu(roczne): 282
+id okresu(kwartały): 270, 271, 272, 273
+
+Do wyszukania:
+id sposobu prezentacji miary(wartość w mln zł, ceny bierzące): 105
+id sposobu prezentacji miary(analogiczny okres roku poprzedniego=100 ceny stałe): 7 (dla kwartalnych)
+id sposobu prezentacji miary(okres poprzedni=100 ceny stałe): 92 (dla rocznych)
+
+https://api-dbw.stat.gov.pl/api/variable/variable-data-section?id-zmienna=1038&id-przekroj=16&id-rok=[rok]&id-okres=[okres]&ile-na-stronie=5000&numer-strony=0&lang=pl
+
+id-sposob-prezentacji-miara w odpowiedzi jest inne dla każdego elementu
