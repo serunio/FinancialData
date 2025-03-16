@@ -1,7 +1,140 @@
 ﻿@page "/"
+@using FinancialData.Shared.Models
+@using FinancialData.WebClient.Services
+@inject RecordService RecordService
+@inject DataParamsService DataParamsService
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+@if (DataParams.Count == 0)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<Dropdown Color="DropdownColor.Secondary">
+		<DropdownToggleButton>@DataParams["DataTypes"][DataTypeId]</DropdownToggleButton>
+		<DropdownMenu>
+			@foreach (var i in DataParams["DataTypes"])
+			{
+				<DropdownItem Type="DropdownItemType.Button" @onclick="(() => setDataTypeId(i.Key))">@i.Value</DropdownItem>
+			}
+		</DropdownMenu>
+	</Dropdown>
 
-Welcome to your new app.
+	<Dropdown Color="DropdownColor.Secondary">
+		<DropdownToggleButton>@DataParams["Frequencies"][FrequencyId]</DropdownToggleButton>
+		<DropdownMenu>
+			@foreach (var i in DataParams["Frequencies"])
+			{
+				<DropdownItem Type="DropdownItemType.Button" @onclick="(() => setFrequencyId(i.Key))">@i.Value</DropdownItem>
+			}
+		</DropdownMenu>
+	</Dropdown>
+
+	<Dropdown Color="DropdownColor.Secondary">
+		<DropdownToggleButton>@DataParams["PresentationTypes"][PresentationTypeId]</DropdownToggleButton>
+		<DropdownMenu>
+			@foreach (var i in DataParams["PresentationTypes"])
+			{
+				<DropdownItem Type="DropdownItemType.Button" @onclick="(() => setPresentationTypeId(i.Key))">@i.Value</DropdownItem>
+			}
+		</DropdownMenu>
+	</Dropdown>
+
+	<Button Color="ButtonColor.Secondary" @onclick="(() => GetRecords())">Pokaż</Button>
+}
+
+@if (Records != null)
+{
+	<h3>Records</h3>
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Date</th>
+				<th>Value</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var record in Records)
+			{
+				<tr>
+					<td>@record.Date</td>
+					<td>@record.Value</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+else
+{
+	<p><em>Loading...</em></p>
+}
+
+@code {
+	private int DataTypeId=0;
+	private int FrequencyId=0;
+	private int PresentationTypeId=0;
+	private string StartDate = "1990-01";
+	private string EndDate = "2020-10";
+
+
+	private List<Record>? Records;
+	private Dictionary<string, Dictionary<int, string>> DataParams = [];
+
+	private async Task setDataTypeId(int id)
+	{
+		DataTypeId = id;
+		var frequencies = await DataParamsService.GetDictAsync<Frequency>(DataTypeId);
+		var presentationTypes = await DataParamsService.GetDictAsync<PresentationType>(DataTypeId);
+		FrequencyId = 0;
+		PresentationTypeId = 0;
+
+		UpdateDictionary("Frequencies", frequencies, "Wybierz częstotliwość");
+		UpdateDictionary("PresentationTypes", presentationTypes, "Wybierz sposób prezentacji");
+	}
+
+	private async Task setFrequencyId(int id)
+	{
+		FrequencyId = id;
+		var presentationTypes = await DataParamsService.GetDictAsync<PresentationType>(DataTypeId, FrequencyId);
+
+		if (!presentationTypes.ContainsKey(PresentationTypeId))
+			PresentationTypeId = 0;
+
+		UpdateDictionary("PresentationTypes", presentationTypes, "Wybierz sposób prezentacji");
+	}
+
+	private async Task setPresentationTypeId(int id)
+	{
+		PresentationTypeId = id;
+		var frequencies = await DataParamsService.GetDictAsync<Frequency>(DataTypeId, 0, PresentationTypeId);
+
+		if (!frequencies.ContainsKey(FrequencyId))
+			FrequencyId = 0;
+
+		UpdateDictionary("Frequencies", frequencies, "Wybierz częstotliwość");
+	}
+
+	private void UpdateDictionary(string key, Dictionary<int, string> newData, string defaultValue)
+	{
+		newData.TryAdd(0, defaultValue);
+		DataParams[key] = newData;
+	}
+
+	private async Task GetRecords()
+	{
+		Records = await RecordService.GetRecordsAsync(DataTypeId, FrequencyId, PresentationTypeId, StartDate, EndDate);
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		var dataTypes = await DataParamsService.GetDictAsync<DataType>();
+		var frequencies = await DataParamsService.GetDictAsync<Frequency>();
+		var presentationTypes = await DataParamsService.GetDictAsync<PresentationType>();
+		
+		UpdateDictionary("Frequencies", frequencies, "Wybierz częstotliwość");
+		UpdateDictionary("PresentationTypes", presentationTypes, "Wybierz sposób prezentacji");
+		UpdateDictionary("DataTypes", dataTypes, "Wybierz dane");
+	}
+}

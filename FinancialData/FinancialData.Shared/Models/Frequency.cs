@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 
 namespace FinancialData.Shared.Models
 {
-    public class Frequency
+    public class Frequency : IParam
     {
         public int Id { get; set; }
         public required string Name { get; set; }
+        public static string Link => "Frequencies";
     }
 }

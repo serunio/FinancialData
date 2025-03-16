@@ -11,7 +11,7 @@ namespace FinancialData.Shared.DTOs
         public int DataTypeId { get; set; }
         public int FrequencyId { get; set; }
         public int PresentationTypeId { get; set; }
-        public string? startDate { get; set; }
-        public string? endDate { get; set; }
+        public string? StartDate { get; set; }
+        public string? EndDate { get; set; }
     }
 }

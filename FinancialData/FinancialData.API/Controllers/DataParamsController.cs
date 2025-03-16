@@ -16,15 +16,15 @@ namespace FinancialData.API.Controllers
             return Ok(data);
         }
         [HttpGet("Frequencies")]
-        public async Task<IActionResult> Frequencies()
+        public async Task<IActionResult> Frequencies(int DataTypeId = 0, int PresentationTypeId = 0)
         {
-            var data = await _service.GetAllFrequenciesAsync();
+            var data = await _service.GetFrequenciesAsync(DataTypeId, PresentationTypeId);
             return Ok(data);
         }
         [HttpGet("PresentationTypes")]
-        public async Task<IActionResult> PresentationTypes()
+        public async Task<IActionResult> PresentationTypes(int DataTypeId = 0, int FrequencyId = 0)
         {
-            var data = await _service.GetAllPresentationTypesAsync();
+            var data = await _service.GetPresentationTypesAsync(DataTypeId, FrequencyId);
             return Ok(data);
         }
     }

@@ -15,8 +15,9 @@ namespace FinancialData.API.Services
                 .Where(r => r.DataTypeId == getRecordsDto.DataTypeId)
                 .Where(r => r.FrequencyId == getRecordsDto.FrequencyId)
                 .Where(r => r.PresentationTypeId == getRecordsDto.PresentationTypeId)
-                .Where(r => r.Date >= DateTime.Parse(getRecordsDto.startDate ?? "1900-01"))
-                .Where(r => r.Date <= DateTime.Parse(getRecordsDto.endDate ?? "2100-01"))
+                .Where(r => r.Date >= DateTime.Parse(getRecordsDto.StartDate ?? "1900-01"))
+                .Where(r => r.Date <= DateTime.Parse(getRecordsDto.EndDate ?? "2100-01"))
+                .OrderBy(r => r.Date)
                 .ToListAsync();
             return records;
         }

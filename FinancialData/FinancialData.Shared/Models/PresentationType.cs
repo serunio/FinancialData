@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace FinancialData.Shared.Models
 {
-    public class PresentationType
+    public class PresentationType : IParam
     {
         public int Id { get; set; }
         public required string Name { get; set; }
+        public static string Link => "PresentationTypes";
     }
 }

@@ -14,6 +14,16 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<InflationDataService>();
 builder.Services.AddScoped<DataParamsService>();
 builder.Services.AddScoped<RecordService>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.WithOrigins("https://localhost:7188")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+        });
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -22,6 +32,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowAll");
 
 app.UseHttpsRedirection();
 
