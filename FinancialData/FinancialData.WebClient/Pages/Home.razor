@@ -55,18 +55,6 @@ else
 }
 
 @code {
-	private int DataTypeId {
-		get => ParamsIds["DataTypes"];
-		set => ParamsIds["DataTypes"] = value;
-	}
-	private int FrequencyId {
-		get => ParamsIds["Frequencies"];
-		set => ParamsIds["Frequencies"] = value;
-	}
-	private int PresentationTypeId {
-		get => ParamsIds["PresentationTypes"];
-		set => ParamsIds["PresentationTypes"] = value;
-	}
 	private string StartDate = "1990-01";
 	private string EndDate = "2020-10";
 
@@ -79,6 +67,12 @@ else
 		{ "Frequencies", 0 },
 		{ "PresentationTypes", 0 }
 	};
+	private Dictionary<string, string> DefaultValues = new()
+	{
+		{ "DataTypes", "Wybierz dane" },
+		{ "Frequencies", "Wybierz częstotliwość" },
+		{ "PresentationTypes", "Wybierz sposób prezentacji" }
+	};
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -88,48 +82,41 @@ else
 	private async Task LoadDataParamsAsync()
 	{
 		DataParams.Clear();
-		await LoadDictionaryAsync<DataType>("DataTypes", "Wybierz dane");
-		await LoadDictionaryAsync<Frequency>("Frequencies", "Wybierz częstotliwość");
-		await LoadDictionaryAsync<PresentationType>("PresentationTypes", "Wybierz sposób prezentacji");
+		await LoadDictionaryAsync<DataType>("DataTypes");
+		await LoadDictionaryAsync<Frequency>("Frequencies");
+		await LoadDictionaryAsync<PresentationType>("PresentationTypes");
 	}
 
-	private async Task LoadDictionaryAsync<T>(string key, string defauyltValue, int DataTypeId=0, int FrequencyId=0, int PresentationTypeId=0) where T : class, IParam
+	private async Task LoadDictionaryAsync<T>(string key, int DTID=0, int FID=0, int PTID=0) where T : class, IParam
 	{
-		var data = await DataParamsService.GetDictAsync<T>(DataTypeId, FrequencyId, PresentationTypeId);
-		UpdateDictionary(key, data, defauyltValue);
+		var data = await DataParamsService.GetDictAsync<T>(DTID, FID, PTID);
+		data.TryAdd(0, DefaultValues[key]);
+		DataParams[key] = data;
 		if (!data.ContainsKey(ParamsIds[key]))
 			ParamsIds[key] = 0;
-	}
-
-	private void UpdateDictionary(string key, Dictionary<int, string> newData, string defaultValue)
-	{
-		newData.TryAdd(0, defaultValue);
-		DataParams[key] = newData;
 	}
 
 	private async Task UpdateSelection(string key, int id)
 	{
 		ParamsIds[key] = id;
-		await (key switch
+
+		if (key == "DataTypes")
 		{
-			"DataTypes" => setDataTypeId(id),
-			"Frequencies" => LoadDictionaryAsync<PresentationType>("PresentationTypes", "Wybierz sposób prezentacji", DataTypeId, id),
-			"PresentationTypes" => LoadDictionaryAsync<Frequency>("Frequencies", "Wybierz częstotliwość", DataTypeId, 0, id),
-			_ => throw new ArgumentException("Invalid key")
-		});
-	}
+			ParamsIds["Frequencies"] = 0;
+			ParamsIds["PresentationTypes"] = 0;
+		}
 
-	private async Task setDataTypeId(int id)
-	{
-		FrequencyId = 0;
-		PresentationTypeId = 0;
+		if (key == "DataTypes" || key == "Frequencies")
+			await LoadDictionaryAsync<PresentationType>("PresentationTypes", DTID: ParamsIds["DataTypes"], FID: ParamsIds["Frequencies"]);
+		
 
-		await LoadDictionaryAsync<Frequency>("Frequencies", "Wybierz częstotliwość", id);
-		await LoadDictionaryAsync<PresentationType>("PresentationTypes", "Wybierz sposób prezentacji", id);
+		if (key == "DataTypes" || key == "PresentationTypes")
+			await LoadDictionaryAsync<Frequency>("Frequencies", DTID: ParamsIds["DataTypes"], PTID: ParamsIds["PresentationTypes"]);
+		
 	}
 
 	private async Task GetRecords()
 	{
-		Records = await RecordService.GetRecordsAsync(DataTypeId, FrequencyId, PresentationTypeId, StartDate, EndDate);
+		Records = await RecordService.GetRecordsAsync(ParamsIds["DataTypes"], ParamsIds["Frequencies"], ParamsIds["PresentationTypes"], StartDate, EndDate);
 	}
 }
