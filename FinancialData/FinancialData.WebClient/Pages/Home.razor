@@ -12,35 +12,18 @@
 }
 else
 {
-	<Dropdown Color="DropdownColor.Secondary">
-		<DropdownToggleButton>@DataParams["DataTypes"][DataTypeId]</DropdownToggleButton>
-		<DropdownMenu>
-			@foreach (var i in DataParams["DataTypes"])
-			{
-				<DropdownItem Type="DropdownItemType.Button" @onclick="(() => setDataTypeId(i.Key))">@i.Value</DropdownItem>
-			}
-		</DropdownMenu>
-	</Dropdown>
-
-	<Dropdown Color="DropdownColor.Secondary">
-		<DropdownToggleButton>@DataParams["Frequencies"][FrequencyId]</DropdownToggleButton>
-		<DropdownMenu>
-			@foreach (var i in DataParams["Frequencies"])
-			{
-				<DropdownItem Type="DropdownItemType.Button" @onclick="(() => setFrequencyId(i.Key))">@i.Value</DropdownItem>
-			}
-		</DropdownMenu>
-	</Dropdown>
-
-	<Dropdown Color="DropdownColor.Secondary">
-		<DropdownToggleButton>@DataParams["PresentationTypes"][PresentationTypeId]</DropdownToggleButton>
-		<DropdownMenu>
-			@foreach (var i in DataParams["PresentationTypes"])
-			{
-				<DropdownItem Type="DropdownItemType.Button" @onclick="(() => setPresentationTypeId(i.Key))">@i.Value</DropdownItem>
-			}
-		</DropdownMenu>
-	</Dropdown>
+	@foreach (var d in DataParams)
+	{
+		<Dropdown Color="DropdownColor.Secondary">
+			<DropdownToggleButton>@d.Value[ParamsIds[d.Key]]</DropdownToggleButton>
+			<DropdownMenu>
+				@foreach (var i in d.Value)
+				{
+					<DropdownItem Type="DropdownItemType.Button" @onclick="(() => UpdateSelection(d.Key, i.Key))">@i.Value</DropdownItem>
+				}
+			</DropdownMenu>
+		</Dropdown>
+	}
 
 	<Button Color="ButtonColor.Secondary" @onclick="(() => GetRecords())">Pokaż</Button>
 }
@@ -72,48 +55,50 @@ else
 }
 
 @code {
-	private int DataTypeId=0;
-	private int FrequencyId=0;
-	private int PresentationTypeId=0;
+	private int DataTypeId {
+		get => ParamsIds["DataTypes"];
+		set => ParamsIds["DataTypes"] = value;
+	}
+	private int FrequencyId {
+		get => ParamsIds["Frequencies"];
+		set => ParamsIds["Frequencies"] = value;
+	}
+	private int PresentationTypeId {
+		get => ParamsIds["PresentationTypes"];
+		set => ParamsIds["PresentationTypes"] = value;
+	}
 	private string StartDate = "1990-01";
 	private string EndDate = "2020-10";
 
 
 	private List<Record>? Records;
 	private Dictionary<string, Dictionary<int, string>> DataParams = [];
-
-	private async Task setDataTypeId(int id)
+	private Dictionary<string, int> ParamsIds = new()
 	{
-		DataTypeId = id;
-		var frequencies = await DataParamsService.GetDictAsync<Frequency>(DataTypeId);
-		var presentationTypes = await DataParamsService.GetDictAsync<PresentationType>(DataTypeId);
-		FrequencyId = 0;
-		PresentationTypeId = 0;
+		{ "DataTypes", 0 },
+		{ "Frequencies", 0 },
+		{ "PresentationTypes", 0 }
+	};
 
-		UpdateDictionary("Frequencies", frequencies, "Wybierz częstotliwość");
-		UpdateDictionary("PresentationTypes", presentationTypes, "Wybierz sposób prezentacji");
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadDataParamsAsync();
 	}
 
-	private async Task setFrequencyId(int id)
+	private async Task LoadDataParamsAsync()
 	{
-		FrequencyId = id;
-		var presentationTypes = await DataParamsService.GetDictAsync<PresentationType>(DataTypeId, FrequencyId);
-
-		if (!presentationTypes.ContainsKey(PresentationTypeId))
-			PresentationTypeId = 0;
-
-		UpdateDictionary("PresentationTypes", presentationTypes, "Wybierz sposób prezentacji");
+		DataParams.Clear();
+		await LoadDictionaryAsync<DataType>("DataTypes", "Wybierz dane");
+		await LoadDictionaryAsync<Frequency>("Frequencies", "Wybierz częstotliwość");
+		await LoadDictionaryAsync<PresentationType>("PresentationTypes", "Wybierz sposób prezentacji");
 	}
 
-	private async Task setPresentationTypeId(int id)
+	private async Task LoadDictionaryAsync<T>(string key, string defauyltValue, int DataTypeId=0, int FrequencyId=0, int PresentationTypeId=0) where T : class, IParam
 	{
-		PresentationTypeId = id;
-		var frequencies = await DataParamsService.GetDictAsync<Frequency>(DataTypeId, 0, PresentationTypeId);
-
-		if (!frequencies.ContainsKey(FrequencyId))
-			FrequencyId = 0;
-
-		UpdateDictionary("Frequencies", frequencies, "Wybierz częstotliwość");
+		var data = await DataParamsService.GetDictAsync<T>(DataTypeId, FrequencyId, PresentationTypeId);
+		UpdateDictionary(key, data, defauyltValue);
+		if (!data.ContainsKey(ParamsIds[key]))
+			ParamsIds[key] = 0;
 	}
 
 	private void UpdateDictionary(string key, Dictionary<int, string> newData, string defaultValue)
@@ -122,19 +107,29 @@ else
 		DataParams[key] = newData;
 	}
 
+	private async Task UpdateSelection(string key, int id)
+	{
+		ParamsIds[key] = id;
+		await (key switch
+		{
+			"DataTypes" => setDataTypeId(id),
+			"Frequencies" => LoadDictionaryAsync<PresentationType>("PresentationTypes", "Wybierz sposób prezentacji", DataTypeId, id),
+			"PresentationTypes" => LoadDictionaryAsync<Frequency>("Frequencies", "Wybierz częstotliwość", DataTypeId, 0, id),
+			_ => throw new ArgumentException("Invalid key")
+		});
+	}
+
+	private async Task setDataTypeId(int id)
+	{
+		FrequencyId = 0;
+		PresentationTypeId = 0;
+
+		await LoadDictionaryAsync<Frequency>("Frequencies", "Wybierz częstotliwość", id);
+		await LoadDictionaryAsync<PresentationType>("PresentationTypes", "Wybierz sposób prezentacji", id);
+	}
+
 	private async Task GetRecords()
 	{
 		Records = await RecordService.GetRecordsAsync(DataTypeId, FrequencyId, PresentationTypeId, StartDate, EndDate);
-	}
-
-	protected override async Task OnInitializedAsync()
-	{
-		var dataTypes = await DataParamsService.GetDictAsync<DataType>();
-		var frequencies = await DataParamsService.GetDictAsync<Frequency>();
-		var presentationTypes = await DataParamsService.GetDictAsync<PresentationType>();
-		
-		UpdateDictionary("Frequencies", frequencies, "Wybierz częstotliwość");
-		UpdateDictionary("PresentationTypes", presentationTypes, "Wybierz sposób prezentacji");
-		UpdateDictionary("DataTypes", dataTypes, "Wybierz dane");
 	}
 }
