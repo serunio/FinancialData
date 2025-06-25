@@ -14,6 +14,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<InflationDataService>();
 builder.Services.AddScoped<DataParamsService>();
 builder.Services.AddScoped<RecordService>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",

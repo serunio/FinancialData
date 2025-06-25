@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialData.WebClient", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialData.Shared", "FinancialData.Shared\FinancialData.Shared.csproj", "{60E0C1D4-F721-44DE-9FAF-ACC40F1B5BC6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blazor-ApexCharts", "Blazor-ApexCharts\Blazor-ApexCharts.csproj", "{07439FE9-63D6-4F4E-91F7-0B5C6FCCA09E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{60E0C1D4-F721-44DE-9FAF-ACC40F1B5BC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{60E0C1D4-F721-44DE-9FAF-ACC40F1B5BC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{60E0C1D4-F721-44DE-9FAF-ACC40F1B5BC6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07439FE9-63D6-4F4E-91F7-0B5C6FCCA09E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07439FE9-63D6-4F4E-91F7-0B5C6FCCA09E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07439FE9-63D6-4F4E-91F7-0B5C6FCCA09E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07439FE9-63D6-4F4E-91F7-0B5C6FCCA09E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

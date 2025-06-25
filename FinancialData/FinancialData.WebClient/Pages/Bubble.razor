@@ -1,0 +1,52 @@
+﻿@using ApexCharts
+@page "/bubble"
+
+<h3>Bubble Chart (Minimum Working Example)</h3>
+
+<ApexChart TItem="SupportIncident"
+Title="Support Incidents">
+
+
+	<ApexBubbleSeriesDirect TItem="SupportIncident"
+	Items="incidents"
+	Name="incidents"
+	XValue="@(e => e.X)"
+	YValue="@(e => e.Y)"
+	ZValue="@(e => e.Z)" 
+	/>
+	
+
+
+</ApexChart>
+
+@code {
+	private List<SupportIncident> incidents { get; set; } = SampleData.GetSupportIncidents(); 
+
+	public class SupportIncident
+	{
+		public SupportIncident(decimal x, decimal y, int z)
+		{
+			X = x;
+			Y = y;
+			Z = z;
+		}
+		public decimal X { get; set; }
+		public decimal Y { get; set; }
+		public int Z { get; set; }
+	}
+
+	public class SampleData
+	{
+		public static List<SupportIncident> GetSupportIncidents()
+		{
+			List<SupportIncident> list = new();
+			Random r = new Random();
+			for (int i = 0; i < 100; i++)
+			{
+				list.Add( new SupportIncident(r.Next(1, 20), r.Next(1, 20), r.Next(1, 20)) );
+			}
+
+			return list;
+		}
+	}
+}

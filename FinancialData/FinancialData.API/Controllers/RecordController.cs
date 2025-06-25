@@ -13,9 +13,9 @@ namespace FinancialData.API.Controllers
         private readonly RecordService _service = service;
 
         [HttpPost("GetRecords")]
-        public async Task<IActionResult> GetDataFromJson([FromBody]GetRecordsDto getRecordsDto)
+        public async Task<IActionResult> GetDataFromJson([FromBody]SelectionResult selectionResult)
         {
-            var records = await _service.GetRecords(getRecordsDto);
+            var records = await _service.GetRecords(selectionResult);
             return Ok(records);
         }
     }

@@ -101,3 +101,19 @@ a, .btn-link {
 code {
     color: #c02d76;
 }
+
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.chart-wrapper {
+    width: 100%;
+    max-width: 100%;
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}

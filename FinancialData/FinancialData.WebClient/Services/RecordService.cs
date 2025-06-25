@@ -13,17 +13,9 @@ namespace FinancialData.WebClient.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<Record>> GetRecordsAsync(int DataTypeId, int FrequencyId, int PresentationTypeId, string startDate, string endDate)
+        public async Task<List<Record>> GetRecordsAsync(SelectionResult selectionResult)
         {
-            GetRecordsDto getRecordsDto = new GetRecordsDto
-            {
-                DataTypeId = DataTypeId,
-                FrequencyId = FrequencyId,
-                PresentationTypeId = PresentationTypeId,
-                StartDate = startDate,
-                EndDate = endDate
-            };
-            var response = await _httpClient.PostAsJsonAsync("api/GetRecords", getRecordsDto);
+            var response = await _httpClient.PostAsJsonAsync("api/GetRecords", selectionResult);
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<List<Record>>() ?? [];

@@ -1,122 +1,46 @@
 ﻿@page "/"
+@using System.Xml.Serialization
+@using FinancialData.Shared.DTOs
 @using FinancialData.Shared.Models
 @using FinancialData.WebClient.Services
+@using ApexCharts
 @inject RecordService RecordService
 @inject DataParamsService DataParamsService
 
 <PageTitle>Home</PageTitle>
 
-@if (DataParams.Count == 0)
-{
-	<p><em>Loading...</em></p>
-}
-else
-{
-	@foreach (var d in DataParams)
+<BlazorBootstrap.Button Color="ButtonColor.Primary" @onclick="AddChart">Dodaj wykres</BlazorBootstrap.Button>
+<div>
+	@foreach (var chart in Charts)
 	{
-		<Dropdown Color="DropdownColor.Secondary">
-			<DropdownToggleButton>@d.Value[ParamsIds[d.Key]]</DropdownToggleButton>
-			<DropdownMenu>
-				@foreach (var i in d.Value)
-				{
-					<DropdownItem Type="DropdownItemType.Button" @onclick="(() => UpdateSelection(d.Key, i.Key))">@i.Value</DropdownItem>
-				}
-			</DropdownMenu>
-		</Dropdown>
+		<div class="chart-wrapper">
+			<ChartComponent OnRefReady="r => chart.chartRef = r" num="chart.num"/>
+			<BlazorBootstrap.Button Color="ButtonColor.Danger" @onclick="() => RemoveChart(chart)">Usuń</BlazorBootstrap.Button>
+		</div>
 	}
+</div>
 
-	<Button Color="ButtonColor.Secondary" @onclick="(() => GetRecords())">Pokaż</Button>
-}
-
-@if (Records != null)
-{
-	<h3>Records</h3>
-	<table class="table">
-		<thead>
-			<tr>
-				<th>Date</th>
-				<th>Value</th>
-			</tr>
-		</thead>
-		<tbody>
-			@foreach (var record in Records)
-			{
-				<tr>
-					<td>@record.Date</td>
-					<td>@record.Value</td>
-				</tr>
-			}
-		</tbody>
-	</table>
-}
-else
-{
-	<p><em>Loading...</em></p>
-}
 
 @code {
-	private string StartDate = "1990-01";
-	private string EndDate = "2020-10";
 
+	private List<ChartEntry> Charts = new();
 
-	private List<Record>? Records;
-	private Dictionary<string, Dictionary<int, string>> DataParams = [];
-	private Dictionary<string, int> ParamsIds = new()
+	private void AddChart()
 	{
-		{ "DataTypes", 0 },
-		{ "Frequencies", 0 },
-		{ "PresentationTypes", 0 }
-	};
-	private Dictionary<string, string> DefaultValues = new()
-	{
-		{ "DataTypes", "Wybierz dane" },
-		{ "Frequencies", "Wybierz częstotliwość" },
-		{ "PresentationTypes", "Wybierz sposób prezentacji" }
-	};
-
-	protected override async Task OnInitializedAsync()
-	{
-		await LoadDataParamsAsync();
+		var newChart = new ChartEntry();
+		Charts.Add(newChart);
 	}
 
-	private async Task LoadDataParamsAsync()
+	public void RemoveChart(ChartEntry chart)
 	{
-		DataParams.Clear();
-		await LoadDictionaryAsync<DataType>("DataTypes");
-		await LoadDictionaryAsync<Frequency>("Frequencies");
-		await LoadDictionaryAsync<PresentationType>("PresentationTypes");
+		Charts.Remove(chart);
 	}
 
-	private async Task LoadDictionaryAsync<T>(string key, int DTID=0, int FID=0, int PTID=0) where T : class, IParam
+	public class ChartEntry
 	{
-		var data = await DataParamsService.GetDictAsync<T>(DTID, FID, PTID);
-		data.TryAdd(0, DefaultValues[key]);
-		DataParams[key] = data;
-		if (!data.ContainsKey(ParamsIds[key]))
-			ParamsIds[key] = 0;
-	}
-
-	private async Task UpdateSelection(string key, int id)
-	{
-		ParamsIds[key] = id;
-
-		if (key == "DataTypes")
-		{
-			ParamsIds["Frequencies"] = 0;
-			ParamsIds["PresentationTypes"] = 0;
-		}
-
-		if (key == "DataTypes" || key == "Frequencies")
-			await LoadDictionaryAsync<PresentationType>("PresentationTypes", DTID: ParamsIds["DataTypes"], FID: ParamsIds["Frequencies"]);
-		
-
-		if (key == "DataTypes" || key == "PresentationTypes")
-			await LoadDictionaryAsync<Frequency>("Frequencies", DTID: ParamsIds["DataTypes"], PTID: ParamsIds["PresentationTypes"]);
-		
-	}
-
-	private async Task GetRecords()
-	{
-		Records = await RecordService.GetRecordsAsync(ParamsIds["DataTypes"], ParamsIds["Frequencies"], ParamsIds["PresentationTypes"], StartDate, EndDate);
+		public List<LineSeries> Series { get; set; } = [];
+		public ApexChart<Record> chartRef;
+		public int num { get; set; } = 0;
 	}
 }
+

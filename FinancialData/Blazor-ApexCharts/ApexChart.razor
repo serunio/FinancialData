@@ -1,0 +1,9 @@
+﻿
+@typeparam TItem
+@namespace ApexCharts
+
+<div @ref=ChartContainer id="@chartId" />
+<CascadingValue Value="(ApexChart<TItem>)this" Name="Chart">
+    @ChildContent
+    <ApexCharts.Internal.ApexChartTooltip ApexTooltip="ApexPointTooltip" Data="tooltipData" TItem="TItem" JsApexchart="blazor_apexchart" ChartId="@chartId"   />
+</CascadingValue>

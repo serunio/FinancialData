@@ -1,0 +1,127 @@
+﻿@using System.Text
+@using FinancialData.Shared.DTOs
+@using FinancialData.Shared.Models
+@using FinancialData.WebClient.Services
+@using DataType = FinancialData.Shared.Models.DataType
+@using Tab = BlazorBootstrap.Tab
+@inject RecordService RecordService
+@inject DataParamsService DataParamsService
+<div>
+	@foreach (var s in Selections)
+	{
+		<div>
+			<BlazorBootstrap.Button Color="ButtonColor.Success">
+				@($"{s.Caption}")
+			</BlazorBootstrap.Button>
+			<BlazorBootstrap.Button Color="ButtonColor.Danger" @onclick="() => Delete(s.Caption)">Usuń</BlazorBootstrap.Button>
+		</div>
+	}
+	@foreach (var d in DataParams)
+	{
+		<BlazorBootstrap.Dropdown Color="DropdownColor.Primary">
+			<DropdownToggleButton>@d.Value[ParamsIds[d.Key]]</DropdownToggleButton>
+			<BlazorBootstrap.DropdownMenu>
+				@foreach (var i in d.Value)
+				{
+					<BlazorBootstrap.DropdownItem Type="DropdownItemType.Button" @onclick="(() => UpdateSelection(d.Key, i.Key))">@i.Value</BlazorBootstrap.DropdownItem>
+				}
+			</BlazorBootstrap.DropdownMenu>
+		</BlazorBootstrap.Dropdown>
+	}
+	<BlazorBootstrap.Button Color="ButtonColor.Primary" Disabled="!Ready" @onclick="GetParams">Pokaż</BlazorBootstrap.Button>
+</div>
+
+@code {
+	[Parameter] public EventCallback<List<SelectionResult>> OnShow { get; set; }
+	private async Task GetParams()
+	{
+		var sb = new StringBuilder();
+		foreach (var d in DataParams)
+		{
+			sb.Append(d.Value[ParamsIds[d.Key]] + " ");
+		}
+		var result = new SelectionResult
+			{
+				DataTypeId = ParamsIds["DataTypes"],
+				FrequencyId = ParamsIds["Frequencies"],
+				PresentationTypeId = ParamsIds["PresentationTypes"],
+				Caption = sb.ToString()
+			};
+		if (Selections.Exists(x => x.Caption.Equals(result.Caption)))
+			return;
+		Selections.Add(result);
+		await OnShow.InvokeAsync(Selections);
+		await UpdateSelection("DataTypes", 0);
+	}
+
+	private async Task Delete(string caption)
+	{
+		Selections = Selections.Where(x => x.Caption != caption).ToList();
+		await OnShow.InvokeAsync(Selections);
+	}
+
+	private List<SelectionResult> Selections = new();
+
+	private bool Ready => ParamsIds.Values.All(x => x != 0);
+
+	private Dictionary<string, Dictionary<int, string>> DataParams = new()
+	{
+		{ "DataTypes", new Dictionary<int, string> { { 0, "Loading..." } } },
+		{ "Frequencies", new Dictionary<int, string> { { 0, "Loading..." } } },
+		{ "PresentationTypes", new Dictionary<int, string> { { 0, "Loading..." } } }
+	};
+
+	private Dictionary<string, int> ParamsIds = new()
+	{
+		{ "DataTypes", 0 },
+		{ "Frequencies", 0 },
+		{ "PresentationTypes", 0 }
+	};
+
+	private Dictionary<string, string> DefaultValues = new()
+	{
+		{ "DataTypes", "Wybierz dane" },
+		{ "Frequencies", "Wybierz częstotliwość" },
+		{ "PresentationTypes", "Wybierz sposób prezentacji" }
+	};
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadDataParamsAsync();
+	}
+
+	private async Task LoadDataParamsAsync()
+	{
+		//DataParams.Clear();
+		await LoadDictionaryAsync<DataType>("DataTypes");
+		await LoadDictionaryAsync<Frequency>("Frequencies");
+		await LoadDictionaryAsync<PresentationType>("PresentationTypes");
+	}
+
+	private async Task LoadDictionaryAsync<T>(string key, int DTID = 0, int FID = 0, int PTID = 0) where T : class, IParam
+	{
+		var data = await DataParamsService.GetDictAsync<T>(DTID, FID, PTID);
+		data.TryAdd(0, DefaultValues[key]);
+		DataParams[key] = data;
+		if (!data.ContainsKey(ParamsIds[key]))
+			ParamsIds[key] = 0;
+	}
+
+	private async Task UpdateSelection(string key, int id)
+	{
+		ParamsIds[key] = id;
+
+		if (key == "DataTypes")
+		{
+			ParamsIds["Frequencies"] = 0;
+			ParamsIds["PresentationTypes"] = 0;
+		}
+
+		if (key is "DataTypes" or "Frequencies")
+			await LoadDictionaryAsync<PresentationType>("PresentationTypes", DTID: ParamsIds["DataTypes"], FID: ParamsIds["Frequencies"]);
+
+
+		if (key is "DataTypes" or "PresentationTypes")
+			await LoadDictionaryAsync<Frequency>("Frequencies", DTID: ParamsIds["DataTypes"], PTID: ParamsIds["PresentationTypes"]);
+	}
+}

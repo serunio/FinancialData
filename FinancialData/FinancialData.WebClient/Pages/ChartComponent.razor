@@ -1,0 +1,304 @@
+﻿@using ApexCharts
+@using Blazorise.Extensions
+@using FinancialData.Shared.DTOs
+@using FinancialData.Shared.Models
+@using FinancialData.WebClient.Services
+@using Align = ApexCharts.Align
+@using ChartType = ApexCharts.ChartType
+@using Tooltip = ApexCharts.Tooltip
+@inject RecordService RecordService
+@inject IJSRuntime JS
+@inject ILogger<ChartComponent> Logger
+
+
+<div>
+	<Selection OnShow="Refresh" />
+	@if (SeriesList.Count == 2)
+	{
+		<CheckboxInput Label="Scatter" ValueChanged="x => SetupScatter(x)" ValueExpression="() => scatter"/>
+	}
+	@if (!SeriesList.IsNullOrEmpty())
+	{
+		if (scatter)
+		{
+			<CheckboxInput Label="Size" ValueChanged="x => SwitchSize(x)" ValueExpression="() => size"/>
+			<CheckboxInput Label="Color" @bind-Value="color"/>
+
+			<ApexChart @ref="scatterRef" TItem="ScatterPoint" Options="scatterOptions" XAxisType="XAxisType.Numeric">
+				<ApexBubbleSeriesDirect TItem="ScatterPoint" 
+				Items="@ScatterSeries.Points"
+				Name=@($"{ScatterSeries.NameX}, {ScatterSeries.NameY}")
+				XValue="p => p.X"
+				YValue="p => p.Y"
+				ZValue="zValueFunc"
+				OrderByDescending="x => x.Z"/>
+			</ApexChart>
+		}
+		else
+		{
+			<ApexChart @ref="lineChartRef" TItem="Record" XAxisType="XAxisType.Datetime" Options="lineOptions">
+				@foreach (var data in SeriesList)
+				{
+					<ApexPointSeries TItem="Record"
+					Items="@data.Points"
+					Name="@data.Name"
+					SeriesType="SeriesType.Line"
+					XValue="r => r.Date"
+					YValue="r => r.Value"
+
+					/>
+				}
+			</ApexChart>
+		}
+	}
+</div>
+
+@code {
+	private ApexChart<Record> lineChartRef;
+	private ApexChart<ScatterPoint> scatterRef;
+
+	public List<LineSeries> SeriesList = new();
+	public ScatterSeries ScatterSeries = new();
+	[Parameter] public EventCallback<ApexChart<Record>> OnRefReady { get; set; }
+	private ApexChartOptions<Record> lineOptions = new();
+	private ApexChartOptions<ScatterPoint> scatterOptions = new();
+	[Parameter] public int num { get; set; }
+	private bool scatter = false;
+	private bool color = false;
+	private bool size = false;
+	private Func<ScatterPoint, decimal> zValueFunc = _ => 5;
+
+	protected override void OnInitialized()
+	{
+		lineOptions.Debug = true;
+		lineOptions.Tooltip = new Tooltip
+		{
+			//Custom = $"tooltipConfigList[{num}].customTooltip",
+				Custom = $"customTooltip",
+			X = new TooltipX
+			{
+				//Formatter = $"tooltipConfigList[{num}].customFormatter",
+					Formatter = $"customFormatter",
+				Show = false
+
+			}
+		};
+		lineOptions.Yaxis =
+		[
+			new YAxis
+			{
+				DecimalsInFloat = 1
+			}
+		];
+		lineOptions.Xaxis = new XAxis
+		{
+			AxisBorder = new AxisBorder
+			{
+				Height = 2
+			},
+			Labels = new XAxisLabels
+			{
+				DatetimeUTC = false
+			}
+		};
+		lineOptions.Chart = new Chart
+		{
+			Height = "400px",
+			Zoom = new Zoom
+			{
+				Enabled = true,
+				Type = AxisType.X,
+				AutoScaleYaxis = true
+			}
+		};
+		lineOptions.Legend = new Legend
+		{
+			Show = true,
+			ShowForSingleSeries = true,
+			Position = LegendPosition.Bottom,
+			HorizontalAlign = Align.Center
+		};
+		lineOptions.PlotOptions = new PlotOptions()
+		{
+			Line = new PlotOptionsLine()
+			{
+				Colors = new LineColors()
+				{
+
+				}
+			}
+		};
+		scatterOptions.PlotOptions = new PlotOptions()
+		{
+			Bubble = new PlotOptionsBubble()
+			{
+				ZScaling = true
+			}
+		};
+		scatterOptions.Tooltip = new Tooltip()
+		{
+			Enabled = true,
+			//Custom = $"tooltipConfigList[{num}].customTooltipScatter"
+				Custom = $"customTooltipScatter"
+		};
+		scatterOptions.Chart = new Chart
+		{
+			Type = ChartType.Bubble,
+			Height = "400px",
+			Zoom = new Zoom
+			{
+				Enabled = true,
+				Type = AxisType.Xy,
+				AutoScaleYaxis = true
+			}
+		};
+		scatterOptions.Xaxis = new XAxis()
+			{
+				DecimalsInFloat = 1
+			};
+		scatterOptions.Yaxis =
+		[
+			new YAxis
+			{
+				DecimalsInFloat = 1
+			}
+		];
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		//await JS.InvokeVoidAsync("newTooltipConfig", num);
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await OnRefReady.InvokeAsync(lineChartRef);
+		}
+	}
+	
+
+	private List<YAxisInfo> yAxisInfos =
+	[
+		new() { Title = "mln zł", Identifier = "mln", SeriesNames = [], Opposite = true},
+		new() { Title = "%", Identifier = "%", SeriesNames = [], Opposite = true},
+		new() { Title = "Wartość bazowa = 100", Identifier = "100", SeriesNames = [], Opposite = false}
+	];
+
+	private async Task Refresh(List<SelectionResult> results)
+	{
+		var nameList = SeriesList.Select(s => s.Name);
+		foreach (var result in results.Where(result => !nameList.Contains(result.Caption)))
+		{
+			var records = await RecordService.GetRecordsAsync(result);
+			var seriesItem = new LineSeries
+			{
+				Name = result.Caption,
+				Points = records.ToList()
+			};
+			SeriesList.Add(seriesItem);
+
+			foreach (var info in yAxisInfos.Where(info => result.Caption.Contains(info.Identifier)))
+			{
+				info.SeriesNames.Add(result.Caption);
+			}
+		}
+
+		LineSeries? toRemove = null;
+		foreach (var name in nameList.Where(name => !results.Select(r => r.Caption).Contains(name)))
+			toRemove = SeriesList.Find(s => s.Name == name);
+
+		if (toRemove != null)
+		{
+			SeriesList.Remove(toRemove);
+
+			foreach (var info in yAxisInfos.Where(info => info.SeriesNames.Contains(toRemove.Name)))
+				info.SeriesNames.Remove(toRemove.Name);
+		}
+
+		lineOptions.Yaxis = new List<YAxis>(3);
+		foreach (var info in yAxisInfos.Where(info => !info.SeriesNames.IsNullOrEmpty()))
+			lineOptions.Yaxis.Add(new YAxis
+			{
+				DecimalsInFloat = 1, 
+				SeriesName = info.SeriesNames, 
+				Title = new AxisTitle { Text = info.Title }, 
+				ForceNiceScale = false,
+				Opposite = info.Opposite
+				//Max = SeriesList.Where(series => info.SeriesNames.Contains(series.Name)).Select(s => s.Margin(r => r.Value).Item2).Max()
+			});
+
+		if(!scatter || SeriesList.Count != 2)
+		{
+			// await JS.InvokeVoidAsync($"tooltipConfigList[{num}].setupCustomTooltip", SeriesList
+			// 															.Select(s => s.Points
+			// 															.Select(r => r.DateString)
+			// 															.ToList() ));
+			await JS.InvokeVoidAsync($"setupCustomTooltip", SeriesList
+				.Select(s => s.Points
+					.Select(r => r.DateString)
+					.ToList() ));
+		}
+		await InvokeAsync(StateHasChanged);
+		if (lineChartRef != null)
+		{
+			await lineChartRef.UpdateSeriesAsync();
+			await lineChartRef.UpdateOptionsAsync(true, true, true);
+		}
+	}
+
+	public async Task SetupScatter(bool value)
+	{
+		scatter = value;
+		if (value)
+		{
+			ScatterSeries = new ScatterSeries(SeriesList.First(), SeriesList.Last());
+			// await JS.InvokeVoidAsync($"tooltipConfigList[{num}].setupCustomTooltip", ScatterSeries.Points.Select(p => p.DateString).Reverse());
+			await JS.InvokeVoidAsync($"setupCustomTooltip", ScatterSeries.Points.Select(p => p.DateString).Reverse());
+
+			var ymargin = ScatterSeries.Margin(x => x.Y);
+			scatterOptions.Yaxis[0].Min = ymargin.Item1;
+			scatterOptions.Yaxis[0].Max = ymargin.Item2;
+
+			var xmargin = ScatterSeries.Margin(x => x.X);
+			scatterOptions.Xaxis.Min = xmargin.Item1;
+			scatterOptions.Xaxis.Max = xmargin.Item2;
+
+			scatterOptions.Xaxis.Title = new AxisTitle { Text = ScatterSeries.NameX };
+			scatterOptions.Yaxis[0].Title = new AxisTitle { Text = ScatterSeries.NameY };
+
+			await scatterRef.UpdateOptionsAsync(true, true, true);
+		}
+		else
+		{
+			// await JS.InvokeVoidAsync($"tooltipConfigList[{num}].setupCustomTooltip", SeriesList
+			// 	.Select(s => s.Points
+			// 		.Select(r => r.DateString)
+			// 		.ToList() ));
+			await JS.InvokeVoidAsync($"setupCustomTooltip", SeriesList
+				.Select(s => s.Points
+					.Select(r => r.DateString)
+					.ToList()));
+		}
+	}
+
+	public async Task SwitchSize(bool value)
+	{
+		size = value;
+		if (value)
+			zValueFunc = x => x.Z;
+		else
+			zValueFunc = _ => 5;
+		await scatterRef.UpdateSeriesAsync();
+	}
+
+	private class YAxisInfo
+	{
+		public string Title;
+		public string Identifier;
+		public SeriesName SeriesNames;
+		public bool Opposite;
+	}
+
+}
