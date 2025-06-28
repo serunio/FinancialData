@@ -70,15 +70,15 @@ namespace FinancialData.Shared.Models
         public decimal X { get; set; }
         public decimal Y { get; set; }
 
-        public decimal Z
-        {
-            get
-            {
-                if (Series != null)
-                    return (Date.Year - Series.MinYear) + 1;
-                return 1;
-            }
-        }
+        //public decimal Z
+        //{
+        //    get
+        //    {
+        //        if (Series != null)
+        //            return (Date.Year - Series.MinYear) + 1;
+        //        return 1;
+        //    }
+        //}
 
         public DateTime Date;
         public string DateString { get; set; } = "default";
@@ -103,7 +103,7 @@ namespace FinancialData.Shared.Models
                 {
                     X = ra.Value,
                     Y = rb.Value,
-                    DateString = ra.FrequencyId < rb.FrequencyId ? ra.DateString : rb.DateString,
+                    DateString = ra.FrequencyId > rb.FrequencyId ? ra.DateString : rb.DateString,
                     Date = ra.FrequencyId < rb.FrequencyId ? ra.Date : rb.Date,
                     Series = this
                 };

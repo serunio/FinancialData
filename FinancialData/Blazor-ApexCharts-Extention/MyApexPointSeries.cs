@@ -34,12 +34,12 @@ namespace ApexCharts
         /// <summary>
         /// Expression to determine the ordering of X-Values in the series
         /// </summary>
-        [Parameter] public Func<DataPoint<TItem>, object> OrderBy { get; set; }
+        [Parameter] public Func<MyDataPoint<TItem>, object> OrderBy { get; set; }
 
         /// <summary>
         /// Expression to determine the inverse ordering of X-Values in the series
         /// </summary>
-        [Parameter] public Func<DataPoint<TItem>, object> OrderByDescending { get; set; }
+        [Parameter] public Func<MyDataPoint<TItem>, object> OrderByDescending { get; set; }
 
         /// <summary>
         /// Determines the type of data series to draw on the chart
@@ -49,7 +49,7 @@ namespace ApexCharts
         /// <summary>
         /// Function to conditionally modify individual data points in the series
         /// </summary>
-        [Parameter] public Action<DataPoint<TItem>> DataPointMutator { get; set; }
+        [Parameter] public Action<MyDataPoint<TItem>> DataPointMutator { get; set; }
 
         /// <inheritdoc/>
         protected override void OnInitialized()
@@ -100,11 +100,11 @@ namespace ApexCharts
                 return Enumerable.Empty<IDataPoint<TItem>>();
             }
 
-            IEnumerable<DataPoint<TItem>> data;
+            IEnumerable<MyDataPoint<TItem>> data;
 
             if (YValue != null)
             {
-                data = items.Select(e => new DataPoint<TItem>
+                data = items.Select(e => new MyDataPoint<TItem>
                 {
                     X = XValue.Invoke(e),
                     Y = YValue.Invoke(e),
@@ -117,7 +117,7 @@ namespace ApexCharts
             else if (YAggregate != null)
             {
                 data = items.GroupBy(XValue)
-               .Select(d => new DataPoint<TItem>
+               .Select(d => new MyDataPoint<TItem>
                {
                    X = d.Key,
                    Y = YAggregate.Invoke(d),
@@ -144,7 +144,7 @@ namespace ApexCharts
             return UpdateDataPoints(data, DataPointMutator);
         }
 
-        private List<DataPoint<TItem>> GroupData(List<DataPoint<TItem>> dataPoints)
+        private List<MyDataPoint<TItem>> GroupData(List<MyDataPoint<TItem>> dataPoints)
         {
             if (Chart.GroupPoints == null || !dataPoints.Any())
             {
@@ -161,14 +161,14 @@ namespace ApexCharts
                 return dataPoints;
             }
 
-            var newData = new List<DataPoint<TItem>>();
+            var newData = new List<MyDataPoint<TItem>>();
             decimal? thresholdValue = null;
             var maxCount = Chart.GroupPoints.MaxCount;
             int currentCount = 0;
 
-            var groupedPoint = new DataPoint<TItem>
+            var groupedPoint = new MyDataPoint<TItem>
             {
-                GroupedPoints = new List<DataPoint<TItem>>()
+                GroupedPoints = new List<MyDataPoint<TItem>>()
             };
 
             if (Chart.GroupPoints.PercentageThreshold != null)

@@ -47,6 +47,13 @@
 	</ItemGroup>
 
 
+	<ItemGroup>
+	  <Content Update="wwwroot\css\apexcharts.css">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+
 	<PropertyGroup>
 		<DocumentationFile>$(ProjectDir)Blazor-ApexCharts.xml</DocumentationFile>
 	</PropertyGroup>

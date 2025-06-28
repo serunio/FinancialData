@@ -7968,6 +7968,11 @@
             This will determine the size of each bubble.
             </summary>
         </member>
+        <member name="P:ApexCharts.ApexBubbleSeriesDirect`1.EnableSize">
+            <summary>
+            Boolean to detrermine whether the size of bubbles changes based on the Z value.
+            </summary>
+        </member>
         <member name="P:ApexCharts.ApexBubbleSeriesDirect`1.OrderBy">
             <summary>
             Expression to determine the ordering of X-Values in the series

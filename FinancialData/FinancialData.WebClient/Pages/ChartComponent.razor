@@ -22,7 +22,6 @@
 		if (scatter)
 		{
 			<CheckboxInput Label="Size" ValueChanged="x => SwitchSize(x)" ValueExpression="() => size"/>
-			<CheckboxInput Label="Color" @bind-Value="color"/>
 
 			<ApexChart @ref="scatterRef" TItem="ScatterPoint" Options="scatterOptions" XAxisType="XAxisType.Numeric">
 				<ApexBubbleSeriesDirect TItem="ScatterPoint" 
@@ -30,8 +29,10 @@
 				Name=@($"{ScatterSeries.NameX}, {ScatterSeries.NameY}")
 				XValue="p => p.X"
 				YValue="p => p.Y"
-				ZValue="zValueFunc"
-				OrderByDescending="x => x.Z"/>
+				ZValue="p => p.Date"
+				DateString="p => p.DateString"
+				EnableSize="size"
+				OrderBy="x => x.Z"/>
 			</ApexChart>
 		}
 		else
@@ -45,7 +46,7 @@
 					SeriesType="SeriesType.Line"
 					XValue="r => r.Date"
 					YValue="r => r.Value"
-
+					Date="r => r.DateString"
 					/>
 				}
 			</ApexChart>
@@ -64,7 +65,6 @@
 	private ApexChartOptions<ScatterPoint> scatterOptions = new();
 	[Parameter] public int num { get; set; }
 	private bool scatter = false;
-	private bool color = false;
 	private bool size = false;
 	private Func<ScatterPoint, decimal> zValueFunc = _ => 5;
 
@@ -73,14 +73,14 @@
 		lineOptions.Debug = true;
 		lineOptions.Tooltip = new Tooltip
 		{
-			//Custom = $"tooltipConfigList[{num}].customTooltip",
-				Custom = $"customTooltip",
 			X = new TooltipX
 			{
-				//Formatter = $"tooltipConfigList[{num}].customFormatter",
-					Formatter = $"customFormatter",
+				Formatter = @"function (val, opts) {return opts.w?.globals.initialSeries[opts.seriesIndex].data[opts.dataPointIndex].date;}",
 				Show = false
-
+			},
+			Y = new TooltipY
+			{
+				Title = new TooltipYTitle {Formatter = @"function(){return ''}"}
 			}
 		};
 		lineOptions.Yaxis =
@@ -118,28 +118,28 @@
 			Position = LegendPosition.Bottom,
 			HorizontalAlign = Align.Center
 		};
-		lineOptions.PlotOptions = new PlotOptions()
-		{
-			Line = new PlotOptionsLine()
-			{
-				Colors = new LineColors()
-				{
-
-				}
-			}
-		};
 		scatterOptions.PlotOptions = new PlotOptions()
 		{
 			Bubble = new PlotOptionsBubble()
 			{
-				ZScaling = true
+				ZScaling = false
 			}
 		};
 		scatterOptions.Tooltip = new Tooltip()
 		{
 			Enabled = true,
-			//Custom = $"tooltipConfigList[{num}].customTooltipScatter"
-				Custom = $"customTooltipScatter"
+			Custom = @"function({ series, seriesIndex, dataPointIndex, w }) {
+					return `
+					<div style=""border: 1px solid #ccc; border-radius: 4px; overflow: hidden; font-family: sans-serif;"">
+						<div style=""background: #008FFB; color: white; font-weight: bold; padding: 6px 8px; font-size: 13px;"">
+							${w.config.series[seriesIndex].data[dataPointIndex].date}
+						</div>
+						<div style=""background: white; color: #333; padding: 6px 8px; font-size: 12px;"">
+							X: ${w.config.series[seriesIndex].data[dataPointIndex].x}<br>
+							Y: ${w.config.series[seriesIndex].data[dataPointIndex].y}
+						</div>
+					</div>`;
+					}"
 		};
 		scatterOptions.Chart = new Chart
 		{
@@ -165,11 +165,6 @@
 		];
 	}
 
-	protected override async Task OnInitializedAsync()
-	{
-		//await JS.InvokeVoidAsync("newTooltipConfig", num);
-	}
-
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (firstRender)
@@ -177,13 +172,12 @@
 			await OnRefReady.InvokeAsync(lineChartRef);
 		}
 	}
-	
 
 	private List<YAxisInfo> yAxisInfos =
 	[
 		new() { Title = "mln zł", Identifier = "mln", SeriesNames = [], Opposite = true},
-		new() { Title = "%", Identifier = "%", SeriesNames = [], Opposite = true},
-		new() { Title = "Wartość bazowa = 100", Identifier = "100", SeriesNames = [], Opposite = false}
+	new() { Title = "%", Identifier = "%", SeriesNames = [], Opposite = true},
+	new() { Title = "Wartość bazowa = 100", Identifier = "100", SeriesNames = [], Opposite = false}
 	];
 
 	private async Task Refresh(List<SelectionResult> results)
@@ -229,67 +223,43 @@
 				//Max = SeriesList.Where(series => info.SeriesNames.Contains(series.Name)).Select(s => s.Margin(r => r.Value).Item2).Max()
 			});
 
-		if(!scatter || SeriesList.Count != 2)
-		{
-			// await JS.InvokeVoidAsync($"tooltipConfigList[{num}].setupCustomTooltip", SeriesList
-			// 															.Select(s => s.Points
-			// 															.Select(r => r.DateString)
-			// 															.ToList() ));
-			await JS.InvokeVoidAsync($"setupCustomTooltip", SeriesList
-				.Select(s => s.Points
-					.Select(r => r.DateString)
-					.ToList() ));
-		}
 		await InvokeAsync(StateHasChanged);
 		if (lineChartRef != null)
 		{
 			await lineChartRef.UpdateSeriesAsync();
 			await lineChartRef.UpdateOptionsAsync(true, true, true);
 		}
+
+		if (SeriesList.Count != 2)
+			await SetupScatter(false);
 	}
 
 	public async Task SetupScatter(bool value)
 	{
 		scatter = value;
-		if (value)
-		{
-			ScatterSeries = new ScatterSeries(SeriesList.First(), SeriesList.Last());
-			// await JS.InvokeVoidAsync($"tooltipConfigList[{num}].setupCustomTooltip", ScatterSeries.Points.Select(p => p.DateString).Reverse());
-			await JS.InvokeVoidAsync($"setupCustomTooltip", ScatterSeries.Points.Select(p => p.DateString).Reverse());
+		if (!value || SeriesList is null || SeriesList.Count < 2 || scatterOptions?.Yaxis?.Count < 1)
+			return;
 
-			var ymargin = ScatterSeries.Margin(x => x.Y);
-			scatterOptions.Yaxis[0].Min = ymargin.Item1;
-			scatterOptions.Yaxis[0].Max = ymargin.Item2;
+		await Task.Yield();
+		
+		ScatterSeries = new ScatterSeries(SeriesList.First(), SeriesList.Last());
+		var ymargin = ScatterSeries.Margin(x => x.Y);
+		scatterOptions.Yaxis[0].Min = ymargin.Item1;
+		scatterOptions.Yaxis[0].Max = ymargin.Item2;
 
-			var xmargin = ScatterSeries.Margin(x => x.X);
-			scatterOptions.Xaxis.Min = xmargin.Item1;
-			scatterOptions.Xaxis.Max = xmargin.Item2;
+		var xmargin = ScatterSeries.Margin(x => x.X);
+		scatterOptions.Xaxis.Min = xmargin.Item1;
+		scatterOptions.Xaxis.Max = xmargin.Item2;
 
-			scatterOptions.Xaxis.Title = new AxisTitle { Text = ScatterSeries.NameX };
-			scatterOptions.Yaxis[0].Title = new AxisTitle { Text = ScatterSeries.NameY };
+		scatterOptions.Xaxis.Title = new AxisTitle { Text = ScatterSeries.NameX };
+		scatterOptions.Yaxis[0].Title = new AxisTitle { Text = ScatterSeries.NameY };
 
-			await scatterRef.UpdateOptionsAsync(true, true, true);
-		}
-		else
-		{
-			// await JS.InvokeVoidAsync($"tooltipConfigList[{num}].setupCustomTooltip", SeriesList
-			// 	.Select(s => s.Points
-			// 		.Select(r => r.DateString)
-			// 		.ToList() ));
-			await JS.InvokeVoidAsync($"setupCustomTooltip", SeriesList
-				.Select(s => s.Points
-					.Select(r => r.DateString)
-					.ToList()));
-		}
+		await scatterRef.UpdateOptionsAsync(true, true, true);
 	}
 
 	public async Task SwitchSize(bool value)
 	{
 		size = value;
-		if (value)
-			zValueFunc = x => x.Z;
-		else
-			zValueFunc = _ => 5;
 		await scatterRef.UpdateSeriesAsync();
 	}
 

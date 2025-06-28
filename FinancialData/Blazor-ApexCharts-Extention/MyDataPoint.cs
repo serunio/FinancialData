@@ -7,7 +7,7 @@ namespace ApexCharts
     /// Used to create data points for chart types with a singular Y-value
     /// </summary>
     /// <typeparam name="TItem">The data type to be used in the chart to create data points.</typeparam>
-    public class DataPoint<TItem> : IDataPoint<TItem>
+    public class MyDataPoint<TItem> : IDataPoint<TItem>
     {
         /// <inheritdoc cref="IDataPoint{TItem}.FillColor"/>
         public string FillColor { get; set; }
@@ -42,7 +42,7 @@ namespace ApexCharts
         /// Will be available when <see cref="ApexChart{TItem}.GroupPoints"/> is used
         /// </remarks>
         [JsonIgnore]
-        public List<DataPoint<TItem>> GroupedPoints { get; internal set; }
+        public List<MyDataPoint<TItem>> GroupedPoints { get; internal set; }
 
     }
 

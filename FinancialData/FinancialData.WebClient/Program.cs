@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Blazorise;
 using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
-using MudBlazor.Services;
 //using ApexCharts;
 
 
@@ -23,7 +22,6 @@ builder.Services
     })
     .AddBootstrap5Providers()
     .AddFontAwesomeIcons();
-builder.Services.AddMudServices();
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7066/") });
 builder.Services.AddScoped<RecordService>();
 builder.Services.AddScoped<DataParamsService>();
