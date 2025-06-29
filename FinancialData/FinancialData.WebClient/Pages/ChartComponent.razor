@@ -30,7 +30,7 @@
 				XValue="p => p.X"
 				YValue="p => p.Y"
 				ZValue="p => p.Date"
-				DateString="p => p.DateString"
+				Extra="p => p.DateString"
 				EnableSize="size"
 				OrderBy="x => x.Z"/>
 			</ApexChart>
@@ -46,7 +46,7 @@
 					SeriesType="SeriesType.Line"
 					XValue="r => r.Date"
 					YValue="r => r.Value"
-					Date="r => r.DateString"
+					Extra="r => r.DateString"
 					/>
 				}
 			</ApexChart>
@@ -63,7 +63,6 @@
 	[Parameter] public EventCallback<ApexChart<Record>> OnRefReady { get; set; }
 	private ApexChartOptions<Record> lineOptions = new();
 	private ApexChartOptions<ScatterPoint> scatterOptions = new();
-	[Parameter] public int num { get; set; }
 	private bool scatter = false;
 	private bool size = false;
 	private Func<ScatterPoint, decimal> zValueFunc = _ => 5;
@@ -75,7 +74,7 @@
 		{
 			X = new TooltipX
 			{
-				Formatter = @"function (val, opts) {return opts.w?.globals.initialSeries[opts.seriesIndex].data[opts.dataPointIndex].date;}",
+				Formatter = @"function (val, opts) {return opts.w?.globals.initialSeries[opts.seriesIndex].data[opts.dataPointIndex].extra;}",
 				Show = false
 			},
 			Y = new TooltipY
@@ -132,7 +131,7 @@
 					return `
 					<div style=""border: 1px solid #ccc; border-radius: 4px; overflow: hidden; font-family: sans-serif;"">
 						<div style=""background: #008FFB; color: white; font-weight: bold; padding: 6px 8px; font-size: 13px;"">
-							${w.config.series[seriesIndex].data[dataPointIndex].date}
+							${w.config.series[seriesIndex].data[dataPointIndex].extra}
 						</div>
 						<div style=""background: white; color: #333; padding: 6px 8px; font-size: 12px;"">
 							X: ${w.config.series[seriesIndex].data[dataPointIndex].x}<br>
@@ -176,8 +175,8 @@
 	private List<YAxisInfo> yAxisInfos =
 	[
 		new() { Title = "mln zł", Identifier = "mln", SeriesNames = [], Opposite = true},
-	new() { Title = "%", Identifier = "%", SeriesNames = [], Opposite = true},
-	new() { Title = "Wartość bazowa = 100", Identifier = "100", SeriesNames = [], Opposite = false}
+		new() { Title = "%", Identifier = "%", SeriesNames = [], Opposite = true},
+		new() { Title = "Wartość bazowa = 100", Identifier = "100", SeriesNames = [], Opposite = false}
 	];
 
 	private async Task Refresh(List<SelectionResult> results)

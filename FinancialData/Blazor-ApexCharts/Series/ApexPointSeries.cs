@@ -21,7 +21,7 @@ namespace ApexCharts
         /// </summary>
         [Parameter] public Func<TItem, decimal?> YValue { get; set; }
 
-        [Parameter] public Func<TItem, string> Date { get; set; }
+        [Parameter] public Func<TItem, object> Extra { get; set; }
 
         /// <summary>
         /// Expression to group Y-values for each X-Value. Use when a multiple Y-values are available.
@@ -110,7 +110,7 @@ namespace ApexCharts
                     Y = YValue.Invoke(e),
                     Items = new List<TItem> { e },
                     FillColor = GetPointColor(e),
-                    date = Date.Invoke(e)
+                    Extra = Extra.Invoke(e)
                 });
 
             }

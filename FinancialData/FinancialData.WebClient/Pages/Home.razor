@@ -10,15 +10,26 @@
 <PageTitle>Home</PageTitle>
 
 <BlazorBootstrap.Button Color="ButtonColor.Primary" @onclick="AddChart">Dodaj wykres</BlazorBootstrap.Button>
-<div>
+<div class="chart-grid">
+	
 	@foreach (var chart in Charts)
 	{
-		<div class="chart-wrapper">
-			<ChartComponent OnRefReady="r => chart.chartRef = r" num="chart.num"/>
-			<BlazorBootstrap.Button Color="ButtonColor.Danger" @onclick="() => RemoveChart(chart)">Usuń</BlazorBootstrap.Button>
-		</div>
+		@if (Charts.Count % 2 != 1 || Charts.Last() != chart)
+		{
+			<div class="chart-wrapper">
+						<ChartComponent OnRefReady="r => chart.chartRef = r" />
+						<BlazorBootstrap.Button Color="ButtonColor.Danger" @onclick="() => RemoveChart(chart)">Usuń</BlazorBootstrap.Button>
+			</div>
+		}
 	}
 </div>
+@if (Charts.Count % 2 == 1)
+{
+	<div class="chart-wrapper">
+		<ChartComponent OnRefReady="r => Charts.Last().chartRef = r" />
+		<BlazorBootstrap.Button Color="ButtonColor.Danger" @onclick="() => RemoveChart(Charts.Last())">Usuń</BlazorBootstrap.Button>
+	</div>
+}
 
 
 @code {
@@ -40,7 +51,6 @@
 	{
 		public List<LineSeries> Series { get; set; } = [];
 		public ApexChart<Record> chartRef;
-		public int num { get; set; } = 0;
 	}
 }
 
