@@ -27,8 +27,6 @@ namespace ApexCharts
         /// </summary>
         public decimal Z { get; set; }
 
-        public string date { get; set; }
-
         /// <inheritdoc cref="IDataPoint{TItem}.Extra"/>
         public object Extra { get; set; }
 

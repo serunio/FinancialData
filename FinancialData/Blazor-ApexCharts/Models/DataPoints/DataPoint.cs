@@ -26,8 +26,6 @@ namespace ApexCharts
         [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
         public decimal? Y { get; set; }
 
-        public string date { get; set; }
-
         /// <inheritdoc cref="IDataPoint{TItem}.Items"/>
         [JsonIgnore]
         public IEnumerable<TItem> Items { get; set; }

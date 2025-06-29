@@ -1,8 +1,11 @@
-﻿@using FinancialData.Shared.DTOs
+﻿@using ApexCharts
+@using Blazorise.Extensions
+@using FinancialData.Shared.DTOs
 @using FinancialData.Shared.Models
 @using FinancialData.WebClient.Services
-@using Tooltip = ApexCharts.Tooltip
+@using Align = ApexCharts.Align
 @using ChartType = ApexCharts.ChartType
+@using Tooltip = ApexCharts.Tooltip
 @inject RecordService RecordService
 @inject IJSRuntime JS
 @inject ILogger<ChartComponent> Logger
@@ -14,7 +17,7 @@
 	{
 		<CheckboxInput Label="Scatter" ValueChanged="x => SetupScatter(x)" ValueExpression="() => scatter"/>
 	}
-	@if (SeriesList.Any())
+	@if (!SeriesList.IsNullOrEmpty())
 	{
 		if (scatter)
 		{
@@ -208,7 +211,7 @@
 		}
 
 		lineOptions.Yaxis = new List<YAxis>(3);
-		foreach (var info in yAxisInfos.Where(info => info.SeriesNames.Any()))
+		foreach (var info in yAxisInfos.Where(info => !info.SeriesNames.IsNullOrEmpty()))
 			lineOptions.Yaxis.Add(new YAxis
 			{
 				DecimalsInFloat = 1, 

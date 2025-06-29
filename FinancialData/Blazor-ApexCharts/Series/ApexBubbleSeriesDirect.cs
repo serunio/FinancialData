@@ -26,7 +26,7 @@ namespace ApexCharts
         /// </summary>
         [Parameter] public Func<TItem, DateTime> ZValue { get; set; }
 
-        [Parameter] public Func<TItem, string> DateString { get; set; }
+        [Parameter] public Func<TItem, object> Extra { get; set; }
 
         /// <summary>
         /// Boolean to detrermine whether the size of bubbles changes based on the Z value.
@@ -77,7 +77,7 @@ namespace ApexCharts
                 Z = (EnableSize ? ZValue.Invoke(d).Year + ZValue.Invoke(d).Month * (decimal)0.08 - ZValue.Invoke(items.First()).Year + 3 : 5) + (decimal)0.00_001 * i--,
                 Items = new List<TItem>() {d},
                 FillColor = GetPointColor(d),
-                date = DateString.Invoke(d)
+                Extra = Extra.Invoke(d)
             });
 
             if (OrderBy != null)

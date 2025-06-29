@@ -11,7 +11,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<InflationDataService>();
+//builder.Services.AddScoped<InflationDataService>();
 builder.Services.AddScoped<DataParamsService>();
 builder.Services.AddScoped<RecordService>();
 
@@ -20,7 +20,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll",
         policy =>
         {
-            policy.WithOrigins("https://localhost:7188")
+            policy.WithOrigins("https://localhost:7222")
             .AllowAnyHeader()
             .AllowAnyMethod();
         });

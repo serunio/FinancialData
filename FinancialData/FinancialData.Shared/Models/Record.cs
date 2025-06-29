@@ -14,11 +14,8 @@ namespace FinancialData.Shared.Models
     {
         public int Id { get; set; }
         public required int DataTypeId { get; set; }
-        //public required DataType DataType { get; set; }
         public required int FrequencyId { get; set; }
-        //public required Frequency Frequency { get; set; }
         public required int PresentationTypeId { get; set; }
-        //public required PresentationType PresentationType { get; set; }
         public DateTime Date { get; set; }
 
         [JsonPropertyName("dateString")]
@@ -69,16 +66,6 @@ namespace FinancialData.Shared.Models
         public ScatterSeries? Series { get; set; }
         public decimal X { get; set; }
         public decimal Y { get; set; }
-
-        //public decimal Z
-        //{
-        //    get
-        //    {
-        //        if (Series != null)
-        //            return (Date.Year - Series.MinYear) + 1;
-        //        return 1;
-        //    }
-        //}
 
         public DateTime Date;
         public string DateString { get; set; } = "default";

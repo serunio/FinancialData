@@ -126,7 +126,6 @@ code {
     .chart-wrapper.full-width {
         flex: 1 1 100%;
     }
-
 .button {
     position: absolute;
     background: none;
@@ -143,23 +142,23 @@ code {
         right: 0.25rem;
     }
 
-        .button.close:hover {
-            color: #c00;
-        }
+    .button.close:hover {
+        color: #c00;
+    }
 
     .button.expand {
         top: 0.11rem;
         right: 1.2rem;
     }
 
-        .button.expand.active {
-            color: #0cc;
-        }
+    .button.expand.active {
+        color: #0cc;
+    }
 
-        .button.expand:hover {
+    .button.expand:hover {
             color: #0c0;
-        }
+     }
 
-        .button.expand.active:hover {
-            color: #c60;
-        }
+    .button.expand.active:hover {
+        color: #c60;
+    }
