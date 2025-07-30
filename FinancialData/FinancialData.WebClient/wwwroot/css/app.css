@@ -163,3 +163,21 @@ code {
         .button.expand.active:hover {
             color: #c60;
         }
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh; /* pe³na wysokoœæ widoku */
+    width: 250px; /* albo ile chcesz */
+    background-color: #f8f9fa; /* np. jasnoszary */
+    padding: 1rem;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    z-index: 1000; /* ¿eby nie zas³ania³o nic przypadkiem */
+    overflow: visible
+}
+
+.main-content {
+    margin-left: 250px; /* tyle samo co szerokoœæ sidebaru */
+    padding: 1rem;
+}

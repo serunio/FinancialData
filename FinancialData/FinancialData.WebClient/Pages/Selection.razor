@@ -6,62 +6,41 @@
 @inject RecordService RecordService
 @inject DataParamsService DataParamsService
 <div>
-	@foreach (var s in Selections)
-	{
-		<div>
-			<BlazorBootstrap.Button Color="ButtonColor.Success" Size="ButtonSize.Small">
-				@($"{s.Caption}")
-			</BlazorBootstrap.Button>
-			<BlazorBootstrap.Button Color="ButtonColor.Danger" Size="ButtonSize.Small" @onclick="() => Delete(s.Caption)">Usuń</BlazorBootstrap.Button>
-		</div>
-	}
 	@foreach (var d in DataParams)
 	{
 		<BlazorBootstrap.Dropdown Color="DropdownColor.Primary" Size ="DropdownSize.Small">
-			<DropdownToggleButton>@d.Value[ParamsIds[d.Key]]</DropdownToggleButton>
+			<DropdownToggleButton>@HideOverflow(d.Value[ParamsIds[d.Key]])</DropdownToggleButton>
 			<BlazorBootstrap.DropdownMenu>
 				@foreach (var i in d.Value)
 				{
-					<BlazorBootstrap.DropdownItem Type="DropdownItemType.Button" @onclick="(() => UpdateSelection(d.Key, i.Key))">@i.Value</BlazorBootstrap.DropdownItem>
+					<BlazorBootstrap.DropdownItem Type="DropdownItemType.Button" @onclick="(() => UpdateSelection(d.Key, i.Key))" Active="d.Value[ParamsIds[d.Key]]==i.Value">@i.Value</BlazorBootstrap.DropdownItem>
 				}
 			</BlazorBootstrap.DropdownMenu>
 		</BlazorBootstrap.Dropdown>
 	}
-	<BlazorBootstrap.Button Color="ButtonColor.Primary" Disabled="!Ready" Size="ButtonSize.Small" @onclick="GetParams">Pokaż</BlazorBootstrap.Button>
 </div>
 
 @code {
-	[Parameter] public EventCallback<List<SelectionResult>> OnShow { get; set; }
-	private async Task GetParams()
+	[Parameter] public required Home HomeRef { get; set; }
+	private SelectionResult SelectionResult = new();
+	public SelectionResult GetParams()
 	{
 		var sb = new StringBuilder();
 		foreach (var d in DataParams)
 		{
 			sb.Append(d.Value[ParamsIds[d.Key]] + " ");
 		}
-		var result = new SelectionResult
+		SelectionResult = new SelectionResult
 			{
 				DataTypeId = ParamsIds["DataTypes"],
 				FrequencyId = ParamsIds["Frequencies"],
 				PresentationTypeId = ParamsIds["PresentationTypes"],
 				Caption = sb.ToString()
 			};
-		if (Selections.Exists(x => x.Caption.Equals(result.Caption)))
-			return;
-		Selections.Add(result);
-		await OnShow.InvokeAsync(Selections);
-		await UpdateSelection("DataTypes", 0);
+		return SelectionResult;
 	}
 
-	private async Task Delete(string caption)
-	{
-		Selections = Selections.Where(x => x.Caption != caption).ToList();
-		await OnShow.InvokeAsync(Selections);
-	}
-
-	private List<SelectionResult> Selections = new();
-
-	private bool Ready => ParamsIds.Values.All(x => x != 0);
+	public bool Ready => ParamsIds.Values.All(x => x != 0);
 
 	private Dictionary<string, Dictionary<int, string>> DataParams = new()
 	{
@@ -122,5 +101,15 @@
 
 		if (key is "DataTypes" or "PresentationTypes")
 			await LoadDictionaryAsync<Frequency>("Frequencies", DTID: ParamsIds["DataTypes"], PTID: ParamsIds["PresentationTypes"]);
+
+		HomeRef.Update();
+	}
+
+	private string HideOverflow(string s)
+	{
+		int maxLength = 29;
+		if (s.Length > maxLength)
+			s = s.Substring(0, maxLength-3) + "...";
+		return s;
 	}
 }

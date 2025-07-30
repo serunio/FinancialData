@@ -1,0 +1,31 @@
+﻿@using FinancialData.Shared.DTOs
+
+<Button Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="() => AddResult(SelectionRef.GetParams())" Disabled="!Ready">Dodaj</Button>
+@foreach(var result in ResultList)
+{
+	<div>
+		<BlazorBootstrap.Button Color="ButtonColor.Success" Size="ButtonSize.Small">
+			@($"{result.Caption}")
+		</BlazorBootstrap.Button>
+		<BlazorBootstrap.Button Color="ButtonColor.Danger" Size="ButtonSize.Small" @onclick="() => DeleteResult(result)">Usuń</BlazorBootstrap.Button>
+	</div>
+}
+
+@code {
+	private List<SelectionResult> ResultList = [];
+	[Parameter] public required Selection SelectionRef { get; set; }
+	[Parameter] public EventCallback<List<SelectionResult>> OnResultChanged { get; set; }
+	private bool Ready => SelectionRef.Ready && !ResultList.Any(x => x.Caption == SelectionRef.GetParams().Caption);
+
+	public void AddResult(SelectionResult result)
+	{
+		ResultList.Add(result);
+		OnResultChanged.InvokeAsync(ResultList);
+	}
+
+	private void DeleteResult(SelectionResult result)
+	{
+		ResultList.Remove(result);
+		OnResultChanged.InvokeAsync(ResultList);
+	}
+}

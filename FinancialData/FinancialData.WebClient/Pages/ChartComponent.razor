@@ -9,7 +9,7 @@
 
 
 <div>
-	<Selection OnShow="Refresh" />
+	<ChartList SelectionRef="SelectionRef" OnResultChanged="Refresh"/>
 	@if (SeriesList.Count == 2)
 	{
 		<CheckboxInput Label="Scatter" ValueChanged="x => SetupScatter(x)" ValueExpression="() => scatter"/>
@@ -58,6 +58,7 @@
 	public List<LineSeries> SeriesList = new();
 	public ScatterSeries ScatterSeries = new();
 	[Parameter] public EventCallback<ApexChart<Record>> OnRefReady { get; set; }
+	[Parameter] public required Selection SelectionRef { get; set; }
 	private ApexChartOptions<Record> lineOptions = new();
 	private ApexChartOptions<ScatterPoint> scatterOptions = new();
 	private bool scatter = false;

@@ -3,8 +3,11 @@
 @using FinancialData.Shared.Models
 @inject IJSRuntime JS
 
-<BlazorBootstrap.Button Color="ButtonColor.Primary" @onclick="AddChart">Dodaj wykres</BlazorBootstrap.Button>
-
+<div class="sidebar">
+    <BlazorBootstrap.Button Color="ButtonColor.Primary" @onclick="AddChart">Dodaj wykres</BlazorBootstrap.Button>
+	<Selection @ref="selection" HomeRef="this" />
+</div>
+<div class="main-content">
 <div class="chart-grid">
     @foreach (var chart in Charts)
     {
@@ -12,22 +15,21 @@
 
         <div class="chart-wrapper @divClass" @key="chart">
             <button class="button close" @onclick="() => RemoveChart(chart)">×</button>
-			@if (chart.IsExpanded)
-			{
+            @if (chart.IsExpanded)
+            {
                 <button class="button expand active" @onclick="() => Collapse(chart)">↔</button>
-			}
-			else
-			{
-				<button class="button expand" @onclick="() => Expand(chart)">↔</button>
-			}
-            <ChartComponent OnRefReady="async r => await HandleRefReady(chart, r)" />
-
-            
+            }
+            else
+            {
+                <button class="button expand" @onclick="() => Expand(chart)">↔</button>
+            }
+            <ChartComponent OnRefReady="async r => await HandleRefReady(chart, r)" SelectionRef="selection" />
         </div>
     }
 </div>
-
+</div>
 @code {
+    public Selection? selection;
     private List<ChartEntry> Charts = new();
 
     private void AddChart()
@@ -45,9 +47,9 @@
         chart.IsExpanded = true;
     }
 
-	private void Collapse(ChartEntry chart)
-	{
-		chart.IsExpanded = false;
+    private void Collapse(ChartEntry chart)
+    {
+        chart.IsExpanded = false;
     }
 
     private async Task HandleRefReady(ChartEntry chart, ApexChart<Record> refReady)
@@ -61,5 +63,10 @@
     {
         public ApexChart<Record>? ChartRef { get; set; }
         public bool IsExpanded { get; set; } = false;
+    }
+
+    public void Update()
+    {
+        StateHasChanged();
     }
 }
