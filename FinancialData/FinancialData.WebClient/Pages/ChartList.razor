@@ -1,21 +1,21 @@
 ﻿@using FinancialData.Shared.DTOs
 
-<Button Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="() => AddResult(SelectionRef.GetParams())" Disabled="!Ready">Dodaj</Button>
+<Button Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="() => AddResult(ViewerSelectorRef.GetParams())" Disabled="!Ready">Dodaj</Button>
 @foreach(var result in ResultList)
 {
-	<div>
-		<BlazorBootstrap.Button Color="ButtonColor.Success" Size="ButtonSize.Small">
+	<div style="display:flex">
+		<p>
 			@($"{result.Caption}")
-		</BlazorBootstrap.Button>
-		<BlazorBootstrap.Button Color="ButtonColor.Danger" Size="ButtonSize.Small" @onclick="() => DeleteResult(result)">Usuń</BlazorBootstrap.Button>
+		</p>
+		<button class="button close" style="top: 0.2rem" @onclick="() => DeleteResult(result)">×</button>
 	</div>
 }
 
 @code {
 	private List<SelectionResult> ResultList = [];
-	[Parameter] public required Selection SelectionRef { get; set; }
+	[Parameter] public required ViewerSelector ViewerSelectorRef { get; set; }
 	[Parameter] public EventCallback<List<SelectionResult>> OnResultChanged { get; set; }
-	private bool Ready => SelectionRef.Ready && !ResultList.Any(x => x.Caption == SelectionRef.GetParams().Caption);
+	private bool Ready => ViewerSelectorRef.Ready && ResultList.All(x => x.Caption != ViewerSelectorRef.GetParams().Caption);
 
 	public void AddResult(SelectionResult result)
 	{

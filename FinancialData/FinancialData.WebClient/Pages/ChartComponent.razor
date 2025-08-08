@@ -9,7 +9,7 @@
 
 
 <div>
-	<ChartList SelectionRef="SelectionRef" OnResultChanged="Refresh"/>
+	<ChartList ViewerSelectorRef="ViewerSelectorRef" OnResultChanged="Refresh"/>
 	@if (SeriesList.Count == 2)
 	{
 		<CheckboxInput Label="Scatter" ValueChanged="x => SetupScatter(x)" ValueExpression="() => scatter"/>
@@ -58,7 +58,7 @@
 	public List<LineSeries> SeriesList = new();
 	public ScatterSeries ScatterSeries = new();
 	[Parameter] public EventCallback<ApexChart<Record>> OnRefReady { get; set; }
-	[Parameter] public required Selection SelectionRef { get; set; }
+	[Parameter] public required ViewerSelector ViewerSelectorRef { get; set; }
 	private ApexChartOptions<Record> lineOptions = new();
 	private ApexChartOptions<ScatterPoint> scatterOptions = new();
 	private bool scatter = false;
@@ -122,6 +122,10 @@
 				ZScaling = false
 			}
 		};
+		lineOptions.Stroke = new Stroke()
+			{
+				Width = 1
+			};
 		scatterOptions.Tooltip = new Tooltip()
 		{
 			Enabled = true,
@@ -216,8 +220,9 @@
 				SeriesName = info.SeriesNames, 
 				Title = new AxisTitle { Text = info.Title }, 
 				ForceNiceScale = false,
-				Opposite = info.Opposite
-				//Max = SeriesList.Where(series => info.SeriesNames.Contains(series.Name)).Select(s => s.Margin(r => r.Value).Item2).Max()
+				Opposite = info.Opposite,
+				//StepSize = Math.Ceiling((double)SeriesList.First(series => info.SeriesNames.Contains(series.Name)).Points.Select(p => p.Value).Max() * 0.1)
+				Max = SeriesList.Where(series => info.SeriesNames.Contains(series.Name)).Select(s => s.Margin(r => r.Value).Item2).Max()
 			});
 
 		await InvokeAsync(StateHasChanged);

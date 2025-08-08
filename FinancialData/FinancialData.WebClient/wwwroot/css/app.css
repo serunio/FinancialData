@@ -128,7 +128,8 @@ code {
     }
 
 .button {
-    position: absolute;
+    position: relative;
+    float: right;
     background: none;
     border: none;
     font-size: 1.25rem;
@@ -136,48 +137,40 @@ code {
     color: #666;
     cursor: pointer;
     z-index: 10;
+    height: 1rem;
+    line-height: 0rem;
 }
 
-    .button.close {
-        top: 0.15rem;
-        right: 0.25rem;
-    }
+.button.close:hover{
+    color: #c00;
+}
 
-        .button.close:hover {
-            color: #c00;
-        }
+button.expand.active {
+    color: #0cc;
+}
 
-    .button.expand {
-        top: 0.11rem;
-        right: 1.2rem;
-    }
+.button.expand:hover {
+    color: #0c0;
+}
 
-        .button.expand.active {
-            color: #0cc;
-        }
-
-        .button.expand:hover {
-            color: #0c0;
-        }
-
-        .button.expand.active:hover {
-            color: #c60;
-        }
+.button.expand.active:hover {
+    color: #c60;
+}
 
 .sidebar {
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh; /* pe³na wysokoœæ widoku */
-    width: 250px; /* albo ile chcesz */
-    background-color: #f8f9fa; /* np. jasnoszary */
+    height: 100vh; 
+    width: 250px; 
+    background-color: #f8f9fa; 
     padding: 1rem;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    z-index: 1000; /* ¿eby nie zas³ania³o nic przypadkiem */
+    z-index: 1000; 
     overflow: visible
 }
 
 .main-content {
-    margin-left: 250px; /* tyle samo co szerokoœæ sidebaru */
+    margin-left: 250px; /* tyle samo co szerokosc sidebaru */
     padding: 1rem;
 }

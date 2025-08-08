@@ -1,0 +1,32 @@
+﻿@using FinancialData.Shared.Models
+@using FinancialData.WebClient.Services
+@inject DataParamsService DataParamsService
+@typeparam TItem where TItem : class, IParam
+
+<Grid TItem="TItem"
+      Class="table"
+      DataProvider="DataTypesProvider<TItem>"
+      FixedHeader="true"
+      Height="200"
+      Responsive="true"
+      Unit="Unit.Px"
+      GridContainerStyle="border:groove;">
+	<GridColumns>
+		<GridColumn TItem="TItem" HeaderText="@Header">@context.Name</GridColumn>
+		<GridColumn TItem="TItem">
+			<button class="button close" style="top: 0.1rem;">×</button>
+		</GridColumn>
+	</GridColumns>
+</Grid>
+
+
+
+@code {
+	[Parameter] public required string Header { get; set; }
+	private async Task<GridDataProviderResult<T>> DataTypesProvider<T>(GridDataProviderRequest<T> request) where T : class, IParam
+	{
+		var result = await DataParamsService.GetParams<T>();
+
+		return await Task.FromResult(request.ApplyTo(result));
+	}
+}

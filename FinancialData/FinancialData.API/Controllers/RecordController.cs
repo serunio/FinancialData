@@ -18,5 +18,12 @@ namespace FinancialData.API.Controllers
             var records = await _service.GetRecords(selectionResult);
             return Ok(records);
         }
+
+        [HttpPost("AddRecords")]
+        public async Task<IActionResult> AddRecords(IFormFile file)
+        {
+            await _service.AddRecords(file);
+            return Ok();
+        }
     }
 }
