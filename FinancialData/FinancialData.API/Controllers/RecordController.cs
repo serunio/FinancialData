@@ -25,5 +25,12 @@ namespace FinancialData.API.Controllers
             await _service.AddRecords(file);
             return Ok();
         }
+
+        [HttpPost("RemoveRecords")]
+        public async Task<IActionResult> RemoveRecords([FromBody] SelectionResult selectionResult)
+        {
+            await _service.RemoveRecords(selectionResult);
+            return Ok();
+        }
     }
 }

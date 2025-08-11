@@ -15,7 +15,10 @@ namespace FinancialData.API.Data
         {
             modelBuilder.Entity<Record>()
                 .Property(r => r.Date)
-                .HasColumnType("DATE");
+                .HasColumnType("date");
+            modelBuilder.Entity<Record>()
+                .HasIndex(e => new { e.DataTypeId, e.FrequencyId, e.PresentationTypeId, e.Date })
+                .IsUnique();
         }
     }
 }

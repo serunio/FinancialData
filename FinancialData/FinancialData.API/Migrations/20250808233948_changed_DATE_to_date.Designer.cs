@@ -3,6 +3,7 @@ using System;
 using FinancialData.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinancialData.API.Migrations
 {
     [DbContext(typeof(FinancialDataContext))]
-    partial class FinancialDataContextModelSnapshot : ModelSnapshot
+    [Migration("20250808233948_changed_DATE_to_date")]
+    partial class changed_DATE_to_date
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

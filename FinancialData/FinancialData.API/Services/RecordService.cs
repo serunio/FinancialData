@@ -7,6 +7,7 @@ using FinancialData.API.Data;
 using FinancialData.Shared.DTOs;
 using FinancialData.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using EFCore.BulkExtensions;
 using static System.Text.RegularExpressions.Regex;
 using Exception = System.Exception;
 
@@ -27,10 +28,18 @@ namespace FinancialData.API.Services
             return records;
         }
 
+        public async Task RemoveRecords(SelectionResult getRecordsDto)
+        {
+            await _context.Record
+                .Where(r => r.DataTypeId == getRecordsDto.DataTypeId)
+                .Where(r => r.FrequencyId == getRecordsDto.FrequencyId)
+                .Where(r => r.PresentationTypeId == getRecordsDto.PresentationTypeId)
+                .ExecuteDeleteAsync();
+            await _context.SaveChangesAsync();
+        }
+
         public async Task AddRecords(IFormFile file)
         {
-            // if (!file.Name.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
-            //     throw new Exception($"Nieprawidłowy format pliku \"{file.Name}\". Oczekiwano pliku CSV.");
 
             var firstLineReader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
             var headerLine = await firstLineReader.ReadLineAsync();
@@ -52,24 +61,28 @@ namespace FinancialData.API.Services
             csv.Context.RegisterClassMap(hasHeader ? typeof(RecordByNameMap) : typeof(RecordByIndexMap));
             var records = csv.GetRecords<RecordDTO>().ToList();
             var readyRecords = await MapToRecords(records);
-            _context.Record.AddRange(readyRecords);
+
+            await _context.BulkInsertOrUpdateAsync(readyRecords, options =>
+            {
+                options.UpdateByProperties = [nameof(Record.DataTypeId), nameof(Record.FrequencyId), nameof(Record.PresentationTypeId), nameof(Record.Date)];
+            });
             await _context.SaveChangesAsync();
         }
 
         public async Task<List<Record>> MapToRecords(List<RecordDTO> recordsDto)
         {
             var dataTypeDict = await _context.DataType
-                .ToDictionaryAsync(dt => dt.Name.ToLowerInvariant(), dt => dt.Id);
+                .ToDictionaryAsync(dt => dt.Name, dt => dt.Id, StringComparer.OrdinalIgnoreCase);
             var frequencyDict = await _context.Frequency
-                .ToDictionaryAsync(f => f.Name.ToLowerInvariant(), f => f.Id);
+                .ToDictionaryAsync(f => f.Name, f => f.Id, StringComparer.OrdinalIgnoreCase);
             var presentationTypeDict = await _context.PresentationType
-                .ToDictionaryAsync(pt => pt.Name.ToLowerInvariant(), pt => pt.Id);
+                .ToDictionaryAsync(pt => pt.Name, pt => pt.Id, StringComparer.OrdinalIgnoreCase);
 
-            var newDataTypes = recordsDto.Select(r => r.DataType.ToLowerInvariant()).Distinct()
+            var newDataTypes = recordsDto.Select(r => r.DataType).Distinct()
                 .Where(dt => !dataTypeDict.ContainsKey(dt))
                 .Select(dt => new DataType { Name = dt })
                 .ToList();
-            var newPresentationType = recordsDto.Select(r => r.PresentationType.ToLowerInvariant()).Distinct()
+            var newPresentationType = recordsDto.Select(r => r.PresentationType).Distinct()
                 .Where(pt => !presentationTypeDict.ContainsKey(pt))
                 .Select(pt => new PresentationType { Name = pt })
                 .ToList();
@@ -85,9 +98,9 @@ namespace FinancialData.API.Services
             var records = new List<Record>();
             foreach (var recordDto in recordsDto)
             {
-                if(!frequencyDict.TryGetValue(recordDto.Frequency.ToLowerInvariant(), out var frequencyId))
+                if(!frequencyDict.TryGetValue(recordDto.Frequency, out var frequencyId))
                 {
-                    throw new Exception($"zła częstotliwość \"{recordDto.Frequency.ToLowerInvariant()}\"");
+                    throw new Exception($"zła częstotliwość \"{recordDto.Frequency}\"");
                     continue;
                 }
 
@@ -102,9 +115,9 @@ namespace FinancialData.API.Services
 
                 var record = new Record
                 {
-                    DataTypeId = dataTypeDict[recordDto.DataType.ToLowerInvariant()],
+                    DataTypeId = dataTypeDict[recordDto.DataType],
                     FrequencyId = frequencyId,
-                    PresentationTypeId = presentationTypeDict[recordDto.PresentationType.ToLowerInvariant()],
+                    PresentationTypeId = presentationTypeDict[recordDto.PresentationType],
                     Date = recordDto.Date,
                     Value = recordDto.Value
                 };
