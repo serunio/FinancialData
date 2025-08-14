@@ -3,12 +3,13 @@ using FinancialData.Shared.Models;
 using System.Text;
 using FinancialData.WebClient.Services;
 using Microsoft.AspNetCore.Components;
+using FinancialData.WebClient.Pages;
 
-namespace FinancialData.WebClient.Pages
+namespace FinancialData.WebClient.Components
 {
-    public abstract class Selector : ComponentBase
+    public partial class Selector
     {
-        [Parameter] public Viewer? PageRef { get; set; }
+        [Parameter] public SelectionParent? PageRef { get; set; }
         [Inject] public DataParamsService DataParamsService { get; set; } = null!;
         internal SelectionResult SelectionResult = new();
         public SelectionResult GetParams()
@@ -56,7 +57,7 @@ namespace FinancialData.WebClient.Pages
             await LoadDataParamsAsync();
         }
 
-        internal async Task LoadDataParamsAsync()
+        public async Task LoadDataParamsAsync()
         {
             //DataParams.Clear();
             await LoadDictionaryAsync<DataType>();
@@ -73,7 +74,33 @@ namespace FinancialData.WebClient.Pages
                 ParamsIds[typeof(T)] = 0;
         }
 
-        internal abstract Task UpdateSelection(Type key, int id);
+        internal async Task UpdateSelection(Type key, int id)
+        {
+            ParamsIds[key] = id;
+
+            if (key == typeof(DataType))
+            {
+                ParamsIds[typeof(Frequency)] = 0;
+                ParamsIds[typeof(PresentationType)] = 0;
+            }
+
+            if (key == typeof(DataType) || key == typeof(Frequency))
+                await LoadDictionaryAsync<PresentationType>(DTID: ParamsIds[typeof(DataType)], FID: ParamsIds[typeof(Frequency)]);
+
+
+            if (key == typeof(DataType) || key == typeof(PresentationType))
+                await LoadDictionaryAsync<Frequency>(DTID: ParamsIds[typeof(DataType)], PTID: ParamsIds[typeof(PresentationType)]);
+
+            PageRef?.Update();
+            
+        }
+
+        public async Task Reset()
+        {
+            await LoadDataParamsAsync();
+            await UpdateSelection(typeof(DataType), 0);
+            StateHasChanged();
+        }
 
         internal string HideOverflow(string s)
         {

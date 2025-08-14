@@ -1,0 +1,54 @@
+﻿@using FinancialData.WebClient.Services
+@inject RecordService RecordService
+
+<h4>Wczytaj nowe dane:</h4>
+
+<InputFile @key="_inputFileKey" OnChange="LoadFile"/>
+<Button Color="ButtonColor.Primary" Size="ButtonSize.Small" Disabled="_loadedFile==null" @onclick="UploadFile">Zatwierdź</Button>
+@if (_fileLoad)
+{
+	<div><Spinner Color="SpinnerColor.Primary"/></div>
+}
+@if (_message != null)
+{
+	<Alert Color="_messageColor">@_message</Alert>
+}
+
+@code {
+	[Parameter] public EventCallback Refresh { get; set; }
+	string? _message;
+	AlertColor _messageColor;
+	IBrowserFile? _loadedFile = null;
+	string _inputFileKey = Guid.NewGuid().ToString();
+	bool _fileLoad = false;
+	private void LoadFile(InputFileChangeEventArgs e)
+	{
+		_loadedFile = e.File;
+		_message = null;
+	}
+
+	private async Task UploadFile()
+	{
+		_message = null;
+		_inputFileKey = Guid.NewGuid().ToString();
+		if (_loadedFile == null)
+			return;
+		_fileLoad = true;
+		try
+		{
+			await RecordService.AddRecordsAsync(_loadedFile);
+		}
+		catch (Exception ex)
+		{
+			_messageColor = AlertColor.Danger;
+			_message = ex.Message;
+		}
+
+		_fileLoad = false;
+		_messageColor = AlertColor.Success;
+		_message = "Dane zostały załadowany pomyślnie.";
+		_loadedFile = null;
+		await Refresh.InvokeAsync();
+
+	}
+}

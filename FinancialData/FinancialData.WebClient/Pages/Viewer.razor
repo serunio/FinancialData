@@ -1,10 +1,12 @@
 ﻿@page "/viewer"
 @using FinancialData.Shared.Models
+@using FinancialData.WebClient.Components
 @inject IJSRuntime JS
+@inherits SelectionParent
 
 <div class="sidebar">
 	<BlazorBootstrap.Button Color="ButtonColor.Primary" @onclick="AddChart">Dodaj wykres</BlazorBootstrap.Button>
-	<ViewerSelector @ref="selection" PageRef="this" />
+	<Selector @ref="selection" PageRef="this" />
 </div>
 <div class="main-content">
 	<div class="chart-grid">
@@ -22,13 +24,13 @@
 				{
 					<button class="button expand" @onclick="() => Expand(chart)">↔</button>
 				}
-				<ChartComponent OnRefReady="async r => await HandleRefReady(chart, r)" ViewerSelectorRef="selection" />
+				<ChartComponent OnRefReady="async r => await HandleRefReady(chart, r)" SelectorRef="selection" />
 			</div>
 		}
 	</div>
 </div>
 @code {
-	public ViewerSelector? selection;
+	public Selector? selection;
 	private List<ChartEntry> Charts = new();
 
 	private void AddChart()
@@ -62,10 +64,5 @@
 	{
 		public ApexChart<Record>? ChartRef { get; set; }
 		public bool IsExpanded { get; set; } = false;
-	}
-
-	public void Update()
-	{
-		StateHasChanged();
 	}
 }

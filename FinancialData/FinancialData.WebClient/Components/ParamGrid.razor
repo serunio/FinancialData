@@ -3,19 +3,21 @@
 @inject DataParamsService DataParamsService
 @typeparam TItem where TItem : class, IParam
 
-<Grid TItem="TItem"
+<Grid @ref="@GridRef"
+      TItem="TItem"
       Class="table"
       DataProvider="DataTypesProvider<TItem>"
       FixedHeader="true"
       Height="200"
       Responsive="true"
-      Unit="Unit.Px"
-      GridContainerStyle="border:groove;">
+      Unit="Unit.Px">
+	
+	@if (!_ready)
+	{
+		<div style="position:relative;top:50%;left:50%;"><Spinner /></div>
+	}
 	<GridColumns>
 		<GridColumn TItem="TItem" HeaderText="@Header">@context.Name</GridColumn>
-		<GridColumn TItem="TItem">
-			<button class="button close" style="top: 0.1rem;">×</button>
-		</GridColumn>
 	</GridColumns>
 </Grid>
 
@@ -23,10 +25,19 @@
 
 @code {
 	[Parameter] public required string Header { get; set; }
+	Grid<TItem>? GridRef { get; set; }
+	bool _ready = false;
+
 	private async Task<GridDataProviderResult<T>> DataTypesProvider<T>(GridDataProviderRequest<T> request) where T : class, IParam
 	{
 		var result = await DataParamsService.GetParams<T>();
-
+		_ready = true;
 		return await Task.FromResult(request.ApplyTo(result));
+	}
+
+	public async Task RefreshGrid()
+	{
+		if(GridRef != null)
+			await GridRef.RefreshDataAsync();
 	}
 }

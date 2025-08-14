@@ -1,0 +1,38 @@
+﻿@using FinancialData.Shared.Models
+@using FinancialData.WebClient.Services
+@inject RecordService RecordService
+@inject IJSRuntime JS
+<h3>Dane:</h3>
+
+<Grid @ref="_gridRef"
+TItem="Record"
+Class="table"
+DataProvider="RecordProvider"
+FixedHeader="true"
+Responsive="true"
+Unit="Unit.Px">
+
+	<GridColumns>
+		<GridColumn TItem="Record" HeaderText="Data">@context.DateString</GridColumn>
+		<GridColumn TItem="Record" HeaderText="Wartość">@context.Value</GridColumn>
+	</GridColumns>
+
+</Grid>
+
+@code {
+	[Parameter] public Selector? Selector { get; set; }
+	Grid<Record>? _gridRef;
+	private async Task<GridDataProviderResult<Record>> RecordProvider(GridDataProviderRequest<Record> request)
+	{
+		if (!(Selector?.Ready ?? false))
+			return await Task.FromResult(request.ApplyTo(new List<Record>()));
+		var records = await RecordService.GetRecordsAsync(Selector.GetParams());
+		return await Task.FromResult(request.ApplyTo(records));
+	}
+
+	public async Task RefreshGrid()
+	{
+		if(_gridRef!=null)
+			await _gridRef.RefreshDataAsync();
+	}
+}

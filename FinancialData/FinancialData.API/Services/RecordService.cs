@@ -8,8 +8,11 @@ using FinancialData.Shared.DTOs;
 using FinancialData.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using EFCore.BulkExtensions;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using static System.Text.RegularExpressions.Regex;
 using Exception = System.Exception;
+using MissingFieldException = CsvHelper.MissingFieldException;
 
 namespace FinancialData.API.Services
 {
@@ -30,12 +33,17 @@ namespace FinancialData.API.Services
 
         public async Task RemoveRecords(SelectionResult getRecordsDto)
         {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
             await _context.Record
                 .Where(r => r.DataTypeId == getRecordsDto.DataTypeId)
                 .Where(r => r.FrequencyId == getRecordsDto.FrequencyId)
                 .Where(r => r.PresentationTypeId == getRecordsDto.PresentationTypeId)
                 .ExecuteDeleteAsync();
-            await _context.SaveChangesAsync();
+            if (!await _context.Record.AnyAsync(r => r.DataTypeId == getRecordsDto.DataTypeId))
+                await _context.DataType.Where(d => d.Id == getRecordsDto.DataTypeId).ExecuteDeleteAsync();
+            if (!await _context.Record.AnyAsync(r => r.PresentationTypeId == getRecordsDto.PresentationTypeId))
+                await _context.PresentationType.Where(d => d.Id == getRecordsDto.PresentationTypeId).ExecuteDeleteAsync();
+            await transaction.CommitAsync();
         }
 
         public async Task AddRecords(IFormFile file)
@@ -44,7 +52,7 @@ namespace FinancialData.API.Services
             var firstLineReader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
             var headerLine = await firstLineReader.ReadLineAsync();
             if (headerLine == null)
-                throw new Exception("Plik jest pusty");
+                throw new InvalidDataException("Plik jest pusty.");
 
             var hasHeader = !headerLine.Any(char.IsDigit);
             var separator = headerLine.Count(c => c == ',') > headerLine.Count(c => c == ';') ? ',' : ';';
@@ -59,7 +67,16 @@ namespace FinancialData.API.Services
             };
             using var csv = new CsvReader(reader, config);
             csv.Context.RegisterClassMap(hasHeader ? typeof(RecordByNameMap) : typeof(RecordByIndexMap));
-            var records = csv.GetRecords<RecordDTO>().ToList();
+            List<RecordDTO> records;
+            try
+            {
+                records = csv.GetRecords<RecordDTO>().ToList();
+            }
+            catch(Exception e) when (e is MissingFieldException or HeaderValidationException)
+            {
+                throw new InvalidDataException("Niepoprawny plik.");
+            }
+            
             var readyRecords = await MapToRecords(records);
 
             await _context.BulkInsertOrUpdateAsync(readyRecords, options =>
@@ -82,11 +99,12 @@ namespace FinancialData.API.Services
                 .Where(dt => !dataTypeDict.ContainsKey(dt))
                 .Select(dt => new DataType { Name = dt })
                 .ToList();
+            
             var newPresentationType = recordsDto.Select(r => r.PresentationType).Distinct()
                 .Where(pt => !presentationTypeDict.ContainsKey(pt))
                 .Select(pt => new PresentationType { Name = pt })
                 .ToList();
-            if(newDataTypes.Any()) _context.DataType.AddRange(newDataTypes);
+            if (newDataTypes.Any()) _context.DataType.AddRange(newDataTypes);
             if(newPresentationType.Any()) _context.PresentationType.AddRange(newPresentationType);
             await _context.SaveChangesAsync();
 
@@ -99,19 +117,12 @@ namespace FinancialData.API.Services
             foreach (var recordDto in recordsDto)
             {
                 if(!frequencyDict.TryGetValue(recordDto.Frequency, out var frequencyId))
-                {
-                    throw new Exception($"zła częstotliwość \"{recordDto.Frequency}\"");
-                    continue;
-                }
+                    throw new InvalidDataException($"Nieprawidłowa częstotliwość \"{recordDto.Frequency}\".");
 
                 if (recordDto.Date.Day != 1 ||
-                    (frequencyId == 1 && recordDto.Date.Month != 1) || //Yearly
-                    (frequencyId == 2 && !new[] { 1, 4, 7, 10 }.Contains(recordDto.Date.Month))) //Quarterly
-
-                {
-                    throw new Exception($"zła data \"{recordDto.Date}\"");
-                    continue;
-                }
+                   (frequencyId == 1 && recordDto.Date.Month != 1) || //Yearly
+                   (frequencyId == 2 && !new[] { 1, 4, 7, 10 }.Contains(recordDto.Date.Month))) //Quarterly
+                    throw new InvalidDataException($"Nieprawidłowa data \"{recordDto.Date}\".");
 
                 var record = new Record
                 {

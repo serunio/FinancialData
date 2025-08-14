@@ -1,6 +1,6 @@
 ﻿@using FinancialData.Shared.DTOs
 
-<Button Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="() => AddResult(ViewerSelectorRef.GetParams())" Disabled="!Ready">Dodaj</Button>
+<Button Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="() => AddResult(SelectorRef.GetParams())" Disabled="!Ready">Dodaj</Button>
 @foreach(var result in ResultList)
 {
 	<div style="display:flex">
@@ -13,9 +13,9 @@
 
 @code {
 	private List<SelectionResult> ResultList = [];
-	[Parameter] public required ViewerSelector ViewerSelectorRef { get; set; }
+	[Parameter] public required Selector SelectorRef { get; set; }
 	[Parameter] public EventCallback<List<SelectionResult>> OnResultChanged { get; set; }
-	private bool Ready => ViewerSelectorRef.Ready && ResultList.All(x => x.Caption != ViewerSelectorRef.GetParams().Caption);
+	private bool Ready => SelectorRef.Ready && ResultList.All(x => x.Caption != SelectorRef.GetParams().Caption);
 
 	public void AddResult(SelectionResult result)
 	{

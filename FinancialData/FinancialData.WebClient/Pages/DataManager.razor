@@ -1,16 +1,56 @@
 ﻿@page "/data-manager"
+@using System.Text
 @using FinancialData.Shared.Models
+@using FinancialData.WebClient.Services
+@using FinancialData.WebClient.Components
+@inject RecordService RecordService
+@inherits SelectionParent
 <div style="display:flex;gap:1rem;">
-	<div style="width:33%"><ParamGrid TItem="DataType" Header="Typy danych"/></div> 
-	<div style="width:33%"><ParamGrid TItem="PresentationType" Header="Jednostki"/></div>
-	<div style="width:33%"><EditorSelector/></div>
+	<div style="width:33%;border:groove"><ParamGrid @ref="_dataTypeGridRef" TItem="DataType" Header="Typy danych"/></div> 
+	<div style="width:33%;border:groove"><ParamGrid @ref="_presentationTypeGridRef" TItem="PresentationType" Header="Jednostki"/></div>
+	<div style="width:33%">
+		<Selector @ref="_selectorRef" PageRef="this"/>
+		<div style="margin-top:1rem;">
+			<Button Color="ButtonColor.Danger" Size="ButtonSize.Small" Disabled="@(!(_selectorRef?.Ready ?? false))" @onclick="RemoveRecords">Usuń</Button>
+			<Button Color="ButtonColor.Primary" Size="ButtonSize.Small" Disabled="@(!(_selectorRef?.Ready ?? false))" @onclick="LoadRecords">Zobacz</Button>
+		</div>
+	</div>
 </div>
 
+<FileUploader Refresh="RefreshGrids"/>
 
-
-
+<RecordGrid @ref="_recordGridRef" Selector="_selectorRef"/>
 
 @code {
+	Selector? _selectorRef;
+	ParamGrid<DataType>? _dataTypeGridRef;
+	ParamGrid<PresentationType>? _presentationTypeGridRef;
+	RecordGrid? _recordGridRef;
+	List<Record>? _loadedRecords;
 
+
+	private async Task RemoveRecords()
+	{
+		await RecordService.RemoveRecordsAsync(_selectorRef?.GetParams());
+		await RefreshGrids();
+	}
+
+	private async Task LoadRecords()
+	{
+		Console.WriteLine($"{_recordGridRef==null}");
+
+		if(_recordGridRef!=null)
+			await _recordGridRef.RefreshGrid();
+	}
+
+	private async Task RefreshGrids()
+	{
+		if(_dataTypeGridRef!=null)
+			await _dataTypeGridRef.RefreshGrid();
+		if(_presentationTypeGridRef!=null)
+			await _presentationTypeGridRef.RefreshGrid();
+		if(_selectorRef!=null)
+			await _selectorRef.Reset();
+	}
 	
 }

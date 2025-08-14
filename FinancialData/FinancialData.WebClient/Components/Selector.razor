@@ -1,0 +1,15 @@
+﻿
+	@foreach (var d in DataParams)
+	{
+		<div style="margin-top:1rem">
+			<BlazorBootstrap.Dropdown Color="DropdownColor.Primary" Size ="DropdownSize.Small">
+				<DropdownToggleButton>@HideOverflow(d.Value[ParamsIds[d.Key]])</DropdownToggleButton>
+				<BlazorBootstrap.DropdownMenu>
+					@foreach (var i in d.Value)
+					{
+						<BlazorBootstrap.DropdownItem Type="DropdownItemType.Button" @onclick="() => UpdateSelection(d.Key, i.Key)" Active="d.Value[ParamsIds[d.Key]]==i.Value">@i.Value</BlazorBootstrap.DropdownItem>
+					}
+				</BlazorBootstrap.DropdownMenu>
+			</BlazorBootstrap.Dropdown>
+		</div>
+	}
