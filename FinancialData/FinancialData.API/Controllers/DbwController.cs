@@ -73,8 +73,8 @@ namespace FinancialData.API.Controllers
             return Ok(dict);
         }
 
-        [HttpGet("ZmiennePrzekroju")]
-        public async Task<IActionResult> GetZmiennePrzekroju(int idPrzekroj)
+        [HttpGet("PrzekrojeZmiennej")]
+        public async Task<IActionResult> GetPrzekrojeZmiennej(int idZmienna)
         {
             
             using HttpResponseMessage response = 
@@ -83,7 +83,7 @@ namespace FinancialData.API.Controllers
             var responseData = await response.Content.ReadAsStringAsync();
             var obj = JsonSerializer.Deserialize<Root>(responseData, Options);
             var d = obj?.Data
-                .Where(x => x.IdPrzekroj == idPrzekroj).Select(x => new { x.IdZmienna, x.NazwaZmienna }).Distinct();
+                .Where(x => x.IdZmienna == idZmienna).Select(x => new { x.IdPrzekroj, x.NazwaPrzekroj }).Distinct();
              
             return Ok(d);
         }

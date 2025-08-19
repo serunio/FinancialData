@@ -222,7 +222,7 @@
 				ForceNiceScale = false,
 				Opposite = info.Opposite,
 				//StepSize = Math.Ceiling((double)SeriesList.First(series => info.SeriesNames.Contains(series.Name)).Points.Select(p => p.Value).Max() * 0.1)
-				Max = SeriesList.Where(series => info.SeriesNames.Contains(series.Name)).Select(s => s.Margin(r => r.Value).Item2).Max()
+				//Max = SeriesList.Where(series => info.SeriesNames.Contains(series.Name)).Select(s => s.Margin(r => r.Value).Item2).Max()
 			});
 
 		await InvokeAsync(StateHasChanged);
