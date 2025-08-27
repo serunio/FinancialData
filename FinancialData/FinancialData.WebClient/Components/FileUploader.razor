@@ -37,6 +37,8 @@
 		try
 		{
 			await RecordService.AddRecordsAsync(_loadedFile);
+			_messageColor = AlertColor.Success;
+			_message = "Dane zostały załadowany pomyślnie.";
 		}
 		catch (Exception ex)
 		{
@@ -45,8 +47,6 @@
 		}
 
 		_fileLoad = false;
-		_messageColor = AlertColor.Success;
-		_message = "Dane zostały załadowany pomyślnie.";
 		_loadedFile = null;
 		await Refresh.InvokeAsync();
 
