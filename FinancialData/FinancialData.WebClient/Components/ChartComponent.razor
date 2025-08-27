@@ -4,7 +4,7 @@
 @using Tooltip = ApexCharts.Tooltip
 @using ChartType = ApexCharts.ChartType
 @inject RecordService RecordService
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 @inject ILogger<ChartComponent> Logger
 
 
@@ -12,15 +12,15 @@
 	<ChartList SelectorRef="SelectorRef" OnResultChanged="Refresh"/>
 	@if (SeriesList.Count == 2)
 	{
-		<CheckboxInput Label="Scatter" ValueChanged="x => SetupScatter(x)" ValueExpression="() => scatter"/>
+		<CheckboxInput Label="Scatter" ValueChanged="x => SetupScatter(x)" ValueExpression="() => _scatter"/>
 	}
 	@if (SeriesList.Any())
 	{
-		if (scatter)
+		if (_scatter)
 		{
-			<CheckboxInput Label="Size" ValueChanged="x => SwitchSize(x)" ValueExpression="() => size"/>
+			<CheckboxInput Label="Size" ValueChanged="x => SwitchSize(x)" ValueExpression="() => _size"/>
 
-			<ApexChart @ref="scatterRef" TItem="ScatterPoint" Options="scatterOptions" XAxisType="XAxisType.Numeric">
+			<ApexChart @ref="_scatterRef" TItem="ScatterPoint" Options="_scatterOptions" XAxisType="XAxisType.Numeric">
 				<ApexBubbleSeriesDirect TItem="ScatterPoint" 
 				Items="@ScatterSeries.Points"
 				Name=@($"{ScatterSeries.NameX}, {ScatterSeries.NameY}")
@@ -28,13 +28,13 @@
 				YValue="p => p.Y"
 				ZValue="p => p.Date"
 				Extra="p => p.DateString"
-				EnableSize="size"
+				EnableSize="_size"
 				OrderBy="x => x.Z"/>
 			</ApexChart>
 		}
 		else
 		{
-			<ApexChart @ref="lineChartRef" TItem="Record" XAxisType="XAxisType.Datetime" Options="lineOptions">
+			<ApexChart @ref="_lineChartRef" TItem="Record" XAxisType="XAxisType.Datetime" Options="_lineOptions">
 				@foreach (var data in SeriesList)
 				{
 					<ApexPointSeries TItem="Record"
@@ -52,23 +52,23 @@
 </div>
 
 @code {
-	private ApexChart<Record> lineChartRef;
-	private ApexChart<ScatterPoint> scatterRef;
+	private ApexChart<Record>? _lineChartRef;
+	private ApexChart<ScatterPoint>? _scatterRef;
 
-	public List<LineSeries> SeriesList = new();
+	public List<LineSeries> SeriesList = [];
 	public ScatterSeries ScatterSeries = new();
 	[Parameter] public EventCallback<ApexChart<Record>> OnRefReady { get; set; }
 	[Parameter] public required Selector SelectorRef { get; set; }
-	private ApexChartOptions<Record> lineOptions = new();
-	private ApexChartOptions<ScatterPoint> scatterOptions = new();
-	private bool scatter = false;
-	private bool size = false;
-	private Func<ScatterPoint, decimal> zValueFunc = _ => 5;
+	private ApexChartOptions<Record> _lineOptions = new();
+	private ApexChartOptions<ScatterPoint> _scatterOptions = new();
+	private bool _scatter = false;
+	private bool _size = false;
+	private Func<ScatterPoint, decimal> _zValueFunc = _ => 5;
 
 	protected override void OnInitialized()
 	{
-		lineOptions.Debug = true;
-		lineOptions.Tooltip = new Tooltip
+		_lineOptions.Debug = true;
+		_lineOptions.Tooltip = new Tooltip
 		{
 			X = new TooltipX
 			{
@@ -80,14 +80,14 @@
 				Title = new TooltipYTitle {Formatter = @"function(){return ''}"}
 			}
 		};
-		lineOptions.Yaxis =
+		_lineOptions.Yaxis =
 		[
 			new YAxis
 			{
 				DecimalsInFloat = 1
 			}
 		];
-		lineOptions.Xaxis = new XAxis
+		_lineOptions.Xaxis = new XAxis
 		{
 			AxisBorder = new AxisBorder
 			{
@@ -98,7 +98,7 @@
 				DatetimeUTC = false
 			}
 		};
-		lineOptions.Chart = new Chart
+		_lineOptions.Chart = new Chart
 		{
 			Height = "400px",
 			Zoom = new Zoom
@@ -108,25 +108,25 @@
 				AutoScaleYaxis = true
 			}
 		};
-		lineOptions.Legend = new Legend
+		_lineOptions.Legend = new Legend
 		{
 			Show = true,
 			ShowForSingleSeries = true,
 			Position = LegendPosition.Bottom,
 			HorizontalAlign = Align.Center
 		};
-		scatterOptions.PlotOptions = new PlotOptions()
+		_scatterOptions.PlotOptions = new PlotOptions()
 		{
 			Bubble = new PlotOptionsBubble()
 			{
 				ZScaling = false
 			}
 		};
-		lineOptions.Stroke = new Stroke()
+		_lineOptions.Stroke = new Stroke()
 			{
 				Width = 1
 			};
-		scatterOptions.Tooltip = new Tooltip()
+		_scatterOptions.Tooltip = new Tooltip()
 		{
 			Enabled = true,
 			Custom = @"function({ series, seriesIndex, dataPointIndex, w }) {
@@ -142,7 +142,7 @@
 					</div>`;
 					}"
 		};
-		scatterOptions.Chart = new Chart
+		_scatterOptions.Chart = new Chart
 		{
 			Type = ChartType.Bubble,
 			Height = "400px",
@@ -153,11 +153,11 @@
 				AutoScaleYaxis = true
 			}
 		};
-		scatterOptions.Xaxis = new XAxis()
+		_scatterOptions.Xaxis = new XAxis()
 			{
 				DecimalsInFloat = 1
 			};
-		scatterOptions.Yaxis =
+		_scatterOptions.Yaxis =
 		[
 			new YAxis
 			{
@@ -170,11 +170,11 @@
 	{
 		if (firstRender)
 		{
-			await OnRefReady.InvokeAsync(lineChartRef);
+			await OnRefReady.InvokeAsync(_lineChartRef);
 		}
 	}
 
-	private List<YAxisInfo> yAxisInfos =
+	private List<YAxisInfo> _yAxisInfos =
 	[
 		new() { Title = "mln zł", Identifier = "mln", SeriesNames = [], Opposite = true},
 		new() { Title = "%", Identifier = "%", SeriesNames = [], Opposite = true},
@@ -194,7 +194,7 @@
 			};
 			SeriesList.Add(seriesItem);
 
-			foreach (var info in yAxisInfos.Where(info => result.Caption.Contains(info.Identifier)))
+			foreach (var info in _yAxisInfos.Where(info => result.Caption.Contains(info.Identifier)))
 			{
 				info.SeriesNames.Add(result.Caption);
 			}
@@ -208,28 +208,29 @@
 		{
 			SeriesList.Remove(toRemove);
 
-			foreach (var info in yAxisInfos.Where(info => info.SeriesNames.Contains(toRemove.Name)))
+			foreach (var info in _yAxisInfos.Where(info => info.SeriesNames.Contains(toRemove.Name)))
 				info.SeriesNames.Remove(toRemove.Name);
 		}
 
-		lineOptions.Yaxis = new List<YAxis>(3);
-		foreach (var info in yAxisInfos.Where(info => info.SeriesNames.Any()))
-			lineOptions.Yaxis.Add(new YAxis
+		_lineOptions.Yaxis = new List<YAxis>(3);
+		foreach (var info in _yAxisInfos.Where(info => info.SeriesNames.Any()))
+			_lineOptions.Yaxis.Add(new YAxis
 			{
 				DecimalsInFloat = 1, 
 				SeriesName = info.SeriesNames, 
 				Title = new AxisTitle { Text = info.Title }, 
 				ForceNiceScale = false,
 				Opposite = info.Opposite,
+				TickAmount = 10,
 				//StepSize = Math.Ceiling((double)SeriesList.First(series => info.SeriesNames.Contains(series.Name)).Points.Select(p => p.Value).Max() * 0.1)
 				//Max = SeriesList.Where(series => info.SeriesNames.Contains(series.Name)).Select(s => s.Margin(r => r.Value).Item2).Max()
 			});
 
 		await InvokeAsync(StateHasChanged);
-		if (lineChartRef != null)
+		if (_lineChartRef != null)
 		{
-			await lineChartRef.UpdateSeriesAsync();
-			await lineChartRef.UpdateOptionsAsync(true, true, true);
+			await _lineChartRef.UpdateSeriesAsync();
+			await _lineChartRef.UpdateOptionsAsync(true, true, true);
 		}
 
 		if (SeriesList.Count != 2)
@@ -238,10 +239,10 @@
 
 	public async Task SetupScatter(bool value)
 	{
-		scatter = value;
+		_scatter = value;
 		if (!value)
 		{
-			if(scatterRef is not null)
+			if(_scatterRef is not null)
 				await SwitchSize(false);
 			return;
 		}
@@ -251,30 +252,32 @@
 		
 		ScatterSeries = new ScatterSeries(SeriesList.First(), SeriesList.Last());
 		var ymargin = ScatterSeries.Margin(x => x.Y);
-		scatterOptions.Yaxis[0].Min = ymargin.Item1;
-		scatterOptions.Yaxis[0].Max = ymargin.Item2;
+		_scatterOptions.Yaxis[0].Min = ymargin.Item1;
+		_scatterOptions.Yaxis[0].Max = ymargin.Item2;
 
 		var xmargin = ScatterSeries.Margin(x => x.X);
-		scatterOptions.Xaxis.Min = xmargin.Item1;
-		scatterOptions.Xaxis.Max = xmargin.Item2;
+		_scatterOptions.Xaxis.Min = xmargin.Item1;
+		_scatterOptions.Xaxis.Max = xmargin.Item2;
 
-		scatterOptions.Xaxis.Title = new AxisTitle { Text = ScatterSeries.NameX };
-		scatterOptions.Yaxis[0].Title = new AxisTitle { Text = ScatterSeries.NameY };
+		_scatterOptions.Xaxis.Title = new AxisTitle { Text = ScatterSeries.NameX };
+		_scatterOptions.Yaxis[0].Title = new AxisTitle { Text = ScatterSeries.NameY };
 
-		await scatterRef.UpdateOptionsAsync(true, true, true);
+		if(_scatterRef!=null)
+			await _scatterRef.UpdateOptionsAsync(true, true, true);
 	}
 
 	public async Task SwitchSize(bool value)
 	{
-		size = value;
-		await scatterRef.UpdateSeriesAsync();
+		_size = value;
+		if (_scatterRef != null)
+			await _scatterRef.UpdateSeriesAsync();
 	}
 
 	private class YAxisInfo
 	{
-		public string Title;
-		public string Identifier;
-		public SeriesName SeriesNames;
+		public required string Title;
+		public required string Identifier;
+		public required SeriesName SeriesNames;
 		public bool Opposite;
 	}
 
