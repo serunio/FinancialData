@@ -1,5 +1,4 @@
 ﻿@page "/data-manager"
-@using System.Text
 @using FinancialData.Shared.Models
 @using FinancialData.WebClient.Services
 @using FinancialData.WebClient.Components
@@ -26,7 +25,6 @@
 	ParamGrid<DataType>? _dataTypeGridRef;
 	ParamGrid<PresentationType>? _presentationTypeGridRef;
 	RecordGrid? _recordGridRef;
-	List<Record>? _loadedRecords;
 
 
 	private async Task RemoveRecords()

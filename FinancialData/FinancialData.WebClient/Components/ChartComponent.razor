@@ -176,9 +176,10 @@
 
 	private List<YAxisInfo> _yAxisInfos =
 	[
-		new() { Title = "mln zł", Identifier = "mln", SeriesNames = [], Opposite = true},
-		new() { Title = "%", Identifier = "%", SeriesNames = [], Opposite = true},
-		new() { Title = "Wartość bazowa = 100", Identifier = "100", SeriesNames = [], Opposite = false}
+		new() { Title = "mln zł", Identifier = "mln zł", SeriesNames = [], Opposite = true, Show = true},
+		new() { Title = "%", Identifier = "%", SeriesNames = [], Opposite = true, Show = true},
+		new() { Title = "Wartość bazowa = 100", Identifier = "100", SeriesNames = [], Opposite = false, Show = true},
+		new() { Title = "", Identifier = "", SeriesNames = [], Opposite = false, Show = true}
 	];
 
 	private async Task Refresh(List<SelectionResult> results)
@@ -194,9 +195,12 @@
 			};
 			SeriesList.Add(seriesItem);
 
-			foreach (var info in _yAxisInfos.Where(info => result.Caption.Contains(info.Identifier)))
+			var infos = _yAxisInfos.Where(info => result.Caption.Contains(info.Identifier)).ToList();
+			if(infos.Count != 2)
+				_yAxisInfos.Find(info => info.Identifier=="")?.SeriesNames.Add(result.Caption);
+			else
 			{
-				info.SeriesNames.Add(result.Caption);
+				infos.First(info => info.Identifier!="").SeriesNames.Add(result.Caption);
 			}
 		}
 
@@ -222,6 +226,7 @@
 				ForceNiceScale = false,
 				Opposite = info.Opposite,
 				TickAmount = 10,
+				Show = info.Show
 				//StepSize = Math.Ceiling((double)SeriesList.First(series => info.SeriesNames.Contains(series.Name)).Points.Select(p => p.Value).Max() * 0.1)
 				//Max = SeriesList.Where(series => info.SeriesNames.Contains(series.Name)).Select(s => s.Margin(r => r.Value).Item2).Max()
 			});
@@ -246,10 +251,10 @@
 				await SwitchSize(false);
 			return;
 		}
-			
+
 
 		await Task.Yield();
-		
+
 		ScatterSeries = new ScatterSeries(SeriesList.First(), SeriesList.Last());
 		var ymargin = ScatterSeries.Margin(x => x.Y);
 		_scatterOptions.Yaxis[0].Min = ymargin.Item1;
@@ -279,6 +284,7 @@
 		public required string Identifier;
 		public required SeriesName SeriesNames;
 		public bool Opposite;
+		public bool Show;
 	}
 
 }

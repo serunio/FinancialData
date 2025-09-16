@@ -46,24 +46,13 @@ namespace FinancialData.Shared.Models
         public string Name { get; set; } = "";
     }
 
-    public class Series<T>
+    public abstract class Series<T>
     {
         public List<T> Points { get; set; } = [];
-        public (double, double) Margin(Func<T, decimal> f)
-        {
-            if (Points.Count == 0)
-                return (0, 0);
-            var list = Points.Select(f);
-            var min = (double)list.Min();
-            var max = (double)list.Max();
-            var margin = (max - min) * 0.1;
-            return (min - margin, max + margin);
-        }
     }
 
     public class ScatterPoint
     {
-        public ScatterSeries? Series { get; set; }
         public decimal X { get; set; }
         public decimal Y { get; set; }
 
@@ -75,7 +64,7 @@ namespace FinancialData.Shared.Models
     {
         public string NameX { get; set; } = "";
         public string NameY { get; set; } = "";
-        public int MinYear;
+        //public int MinYear { get; set; }
 
         public ScatterSeries() { }
         public ScatterSeries(LineSeries a, LineSeries b)
@@ -91,15 +80,25 @@ namespace FinancialData.Shared.Models
                     X = ra.Value,
                     Y = rb.Value,
                     DateString = ra.FrequencyId > rb.FrequencyId ? ra.DateString : rb.DateString,
-                    Date = ra.FrequencyId < rb.FrequencyId ? ra.Date : rb.Date,
-                    Series = this
+                    Date = ra.FrequencyId < rb.FrequencyId ? ra.Date : rb.Date
                 };
                 points.Add(point);
             }
             Points = points;
             NameX = a.Name;
             NameY = b.Name;
-            MinYear = points.Select(x => x.Date.Year).Min();
+            //MinYear = points.Select(x => x.Date.Year).Min();
+        }
+
+        public (double, double) Margin(Func<ScatterPoint, decimal> f)
+        {
+            if (Points.Count == 0)
+                return (0, 0);
+            var range = Points.Select(f);
+            var min = (double)range.Min();
+            var max = (double)range.Max();
+            var margin = (max - min) * 0.1;
+            return (min - margin, max + margin);
         }
     }
 }

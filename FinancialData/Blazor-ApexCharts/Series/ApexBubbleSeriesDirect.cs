@@ -74,7 +74,7 @@ namespace ApexCharts
             {
                 X = XValue.Invoke(d),
                 Y = YValue.Invoke(d),
-                Z = (EnableSize ? ZValue.Invoke(d).Year + ZValue.Invoke(d).Month * (decimal)0.08 - ZValue.Invoke(items.First()).Year + 3 : 5) + (decimal)0.00_001 * i--,
+                Z = EnableSize ? ZValue.Invoke(d).Year + ZValue.Invoke(d).Month * (decimal)0.08 - ZValue.Invoke(items.First()).Year + 3 : 5 + (decimal)0.00_001 * i-- ,
                 Items = new List<TItem>() {d},
                 FillColor = GetPointColor(d),
                 Extra = Extra.Invoke(d)

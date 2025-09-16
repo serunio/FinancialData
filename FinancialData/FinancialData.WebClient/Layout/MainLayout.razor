@@ -15,8 +15,20 @@
 
     <main>
         <div class="bb-top-row px-4 d-flex justify-content-end">
-	        <NavLink href="data-manager" Match="NavLinkMatch.All">Data Manager</NavLink>
-            <NavLink href="viewer" Match="NavLinkMatch.All">Chart Viewer</NavLink>
+	        <div class="nav nav-pills">
+
+		        <NavLink href="data-manager"
+		                 class="nav-link"
+		                 activeClass="active">
+			        Data Manager
+		        </NavLink>
+
+		        <NavLink href="viewer"
+		                 class="nav-link"
+		                 activeClass="active">
+			        Chart Viewer
+		        </NavLink>
+	        </div>
         </div>
 
         <article class="content px-4">

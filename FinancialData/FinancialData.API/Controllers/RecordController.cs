@@ -20,7 +20,7 @@ namespace FinancialData.API.Controllers
         {
             try
             {
-                await service.AddRecords(file);
+                await service.AddRecords(file); 
             }
             catch (InvalidDataException e)
             {

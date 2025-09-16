@@ -20,12 +20,12 @@ namespace FinancialData.API.Services
     {
         private readonly FinancialDataContext _context = context;
 
-        public async Task<List<Record>> GetRecords(SelectionResult getRecordsDto)
+        public async Task<List<Record>> GetRecords(SelectionResult selectionResult)
         {
             var records = await _context.Record
-                .Where(r => r.DataTypeId == getRecordsDto.DataTypeId)
-                .Where(r => r.FrequencyId == getRecordsDto.FrequencyId)
-                .Where(r => r.PresentationTypeId == getRecordsDto.PresentationTypeId)
+                .Where(r => r.DataTypeId == selectionResult.DataTypeId)
+                .Where(r => r.FrequencyId == selectionResult.FrequencyId)
+                .Where(r => r.PresentationTypeId == selectionResult.PresentationTypeId)
                 .OrderBy(r => r.Date)
                 .ToListAsync();
             return records;

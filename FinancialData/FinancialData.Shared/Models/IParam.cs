@@ -10,6 +10,6 @@ namespace FinancialData.Shared.Models
     {
         public abstract int Id { get; set; }
         public abstract string Name { get; set; }
-        public abstract static string Link { get; }
+        public static abstract string Link { get; }
     }
 }
